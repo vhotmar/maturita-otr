@@ -5,23 +5,24 @@ import otr.messages.data.DataX
 import otr.messages.types.{Encrypted, Mac}
 import otr.utils.BitVectorConversions._
 import otr.utils.ByteVectorConversions._
-import otr.utils.Crypto
+import otr.utils.{Crypto, Message, MessageCompanion}
 import scodec.Codec
 import scodec.bits.{ByteVector, HexStringSyntax}
 import scodec.codecs._
 
-import scalaz.Scalaz._
-
 trait SignatureData {
+
+  import otr.utils.Validate._
+
   val encryptedSignature: Encrypted
   val macSignature: Mac
 
   def process(local: Local, remote: NonCompleteRemote, parameters: Parameters): FResult[otr.State] = {
     for {
-    // Validate this message
-      validMac <- valid(parameters.m2)
+    // validate this message
+      validMac <- validate(parameters.m2)
 
-      // Decrypt and parse data
+      // decrypt and parse data
       decryptedSignature <- encryptedSignature.decrypt(parameters.c)
       dataX <- DataX.decode(decryptedSignature)
 
@@ -32,9 +33,9 @@ trait SignatureData {
     } yield state
   }
 
-  def valid(mac: Array[Byte]): FResult[Boolean] =
-    Crypto.verifyMac(mac, encryptedSignature.bytes, macSignature.bytes)
-      .flatMap(b => if (b) true.right else ValidationError("Invalid signature data").left)
+  def validate(mac: Array[Byte]): FResult[Boolean] =
+    macSignature.verify(encryptedSignature.bytes, mac)
+      .validate("Invalid signature data")
 }
 
 case class RevealSignature(
@@ -58,9 +59,14 @@ object RevealSignature extends MessageCompanion[RevealSignature] {
 
   def create(r: Array[Byte], state: NonCompleteState): FResult[RevealSignature] = {
     for {
+    // create and encode dataX
       dataX <- DataX.create(state.local, state.remote, state.parameters)
       encodedDataX <- dataX.encode
+
+      // encrypt it using c
       encryptedDataX <- Crypto.encryptAES(encodedDataX, state.parameters.c)
+
+      // sign it using m2
       mac <- Mac.create(encryptedDataX, state.parameters.m2, 20)
     } yield RevealSignature(
       r,

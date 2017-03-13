@@ -1,5 +1,6 @@
-package otr
+package otr.utils
 
+import otr.FResult
 import otr.messages._
 import scodec.Attempt.{Failure, Successful}
 import scodec.bits.{BitVector, ByteVector}
@@ -85,7 +86,7 @@ object Message {
 
 object MessageCompanion {
   // TODO: investigate automatic class discovery
-  val all: Set[MessageCompanion[_ <: Message]] = Set(DHCommit, DHKey, Empty, RevealSignature, Signature)
+  val all: Set[MessageCompanion[_ <: Message]] = Set(Data, DHCommit, DHKey, Empty, RevealSignature, Signature)
 
   val byCommand: Map[ByteVector, MessageCompanion[_ <: Message]] = {
     require(all.map(_.command).size == all.size, "Type headers must be unique.")

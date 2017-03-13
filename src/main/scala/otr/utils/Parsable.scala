@@ -1,6 +1,6 @@
-package otr
+package otr.utils
 
-import otr.utils.Crypto
+import otr.FResult
 import scodec.Codec
 import scodec.bits.BitVector
 

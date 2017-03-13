@@ -1,7 +1,7 @@
 import java.security.Security
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import otr.{Client, FResult, Receiver, Sender}
+import otr._
 
 import scalaz.Scalaz._
 
@@ -11,20 +11,33 @@ object App {
 
     println("Hello!")
 
-    val (alice, bob) = {
-      val (aSender, aReceiverManager) = MockChannelProvider.createChannel()
-      val (bSender, bReceiverManager) = MockChannelProvider.createChannel()
+    val (aSender, aReceiverManager) = MockChannelProvider.createChannel()
+    val (bSender, bReceiverManager) = MockChannelProvider.createChannel()
 
-      val alice = Client.create(bSender, init = true).toOption.get
-      val bob = Client.create(aSender).toOption.get
+    val alice = Client.create(bSender, ClientData("alice"), init = true).toOption.get
+    val bob = Client.create(aSender, ClientData("bob")).toOption.get
 
-      aReceiverManager.subscribe(alice)
-      bReceiverManager.subscribe(bob)
+    aReceiverManager.subscribe(alice)
+    bReceiverManager.subscribe(bob)
 
-      (alice, bob)
-    }
 
     alice.init()
+
+    bob.send("Im bob".getBytes)
+    bob.send("I write".getBytes)
+    bob.send("Trolololol".getBytes)
+    alice.send("Heyy, thats cool".getBytes)
+    bob.send("I know".getBytes)
+    bob.send("You are not".getBytes)
+    alice.send("Heyy man".getBytes)
+    alice.send("How could you say that to me :(".getBytes)
+
+
+    println("Check sending messages with same texts provides different results")
+    bReceiverManager.enableLogging
+    alice.send("nice".getBytes)
+    alice.send("nice".getBytes)
+    alice.send("nice".getBytes)
   }
 }
 
@@ -38,16 +51,25 @@ object MockChannelProvider {
 
   class MockReceiverManager extends Receiver {
     private var subjects: Set[Receiver] = Set()
+    private var enabledLogging = false
 
     def subscribe(receiver: Receiver): Unit = {
       subjects += receiver
     }
 
     def receive(message: Array[Byte]): FResult[String] = {
+      import otr.utils.ByteVectorConversions._
+
+      if (enabledLogging) println(message.toHex)
+
       subjects.foreach(_.receive(message))
 
       "ok".right[Throwable]
     }
+
+    def enableLogging: Unit = enabledLogging = true
+
+    def disableLogging: Unit = enabledLogging = false
   }
 
   def createChannel(): Tuple2[Sender, MockReceiverManager] = {

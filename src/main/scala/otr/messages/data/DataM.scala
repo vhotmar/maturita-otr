@@ -3,6 +3,7 @@ package otr.messages.data
 import java.security.PublicKey
 
 import otr._
+import otr.utils.{Parsable, ParsableCompanion}
 import scodec.Codec
 import scodec.codecs._
 

@@ -1,6 +1,6 @@
 package otr.messages
 
-import otr.{Message, MessageCompanion}
+import otr.utils.{Message, MessageCompanion}
 import scodec.Codec
 import scodec.bits.{ByteVector, HexStringSyntax}
 import scodec.codecs._

@@ -5,7 +5,7 @@ import java.security.PublicKey
 import otr._
 import otr.utils.BitVectorConversions._
 import otr.utils.ByteVectorConversions._
-import otr.utils.Crypto
+import otr.utils.{Crypto, Parsable, ParsableCompanion}
 import scodec.Codec
 import scodec.bits.ByteVector
 import scodec.codecs._
@@ -31,6 +31,7 @@ object DataX extends ParsableCompanion[DataX] {
     val dataM = DataM(local, remote)
 
     for {
+    // encode dataM, create mac and signature of these data
       encodedDataM <- dataM.encode
       hmac <- Crypto.hmac(encodedDataM, parameters.m1)
       signature <- Crypto.sign(

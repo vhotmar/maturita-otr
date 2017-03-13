@@ -2,6 +2,7 @@ package otr.messages
 
 import otr._
 import otr.messages.types.{Encrypted, Hash}
+import otr.utils.{Message, MessageCompanion}
 import scodec.Codec
 import scodec.bits.{ByteVector, HexStringSyntax}
 import scodec.codecs._

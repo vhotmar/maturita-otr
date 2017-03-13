@@ -22,6 +22,8 @@ case class DHCommitHandler(
 }
 
 object DHCommitHandler {
+  // can't use apply here - because there might be errors,
+  // while generating keyPairs
   def create(): FResult[DHCommitHandler] =
     for {
       keyPair <- Crypto.generateECKeyPair()

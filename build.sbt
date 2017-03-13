@@ -14,7 +14,8 @@ libraryDependencies ++= Seq(
   "org.bouncycastle" % "bcprov-jdk15on" % "1.56",
   "org.scodec" % "scodec-bits_2.11" % "1.1.4",
   "org.scodec" % "scodec-core_2.11" % "1.10.3",
-  "org.scalaz" %% "scalaz-core" % "7.2.9"
+  "org.scalaz" %% "scalaz-core" % "7.2.9",
+  "org.scalafx" %% "scalafx" % "8.0.102-R11"
 )
 
 initialCommands := "import example._"

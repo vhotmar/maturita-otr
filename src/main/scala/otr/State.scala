@@ -32,10 +32,23 @@ case class NonCompleteRemote(publicKey: PublicKey) extends PartialPublic
 
 case class Remote(publicKey: PublicKey, longTermPublicKey: PublicKey, keyId: Int) extends Public
 
-case class Parameters(secret: Array[Byte], ssid: Array[Byte], c: Array[Byte], cp: Array[Byte], m1: Array[Byte], m1p: Array[Byte], m2: Array[Byte], m2p: Array[Byte])
+case class Parameters(
+  secret: Array[Byte],
+  ssid: Array[Byte],
+  c: Array[Byte],
+  cp: Array[Byte],
+  m1: Array[Byte],
+  m1p: Array[Byte],
+  m2: Array[Byte],
+  m2p: Array[Byte]
+)
+
 
 object Parameters {
   def apply(secret: Array[Byte]): Parameters = {
+    // this little bit differs from original implementation, because our secret
+    // is already encoded (probably in different format then MPI - because EC works
+    // with different format
     def h2(byte: Byte): Array[Byte] =
       Crypto.hash(byte +: secret)
 
@@ -64,7 +77,7 @@ object NonCompleteState {
           localKeyPair.getPrivate,
           longTermKeyPair.getPublic,
           longTermKeyPair.getPrivate,
-          1 // TODO: this should be probably randomly initialized
+          1
         ),
         NonCompleteRemote(remotePublicKey),
         Parameters(s)

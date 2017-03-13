@@ -3,28 +3,25 @@ package otr.handlers.ake
 import java.security.KeyPair
 
 import otr._
+import otr.handlers.DataHandler
 import otr.messages.types.{Encrypted, Hash}
 import otr.messages.{RevealSignature, Signature}
+import otr.state.DataState
 import otr.utils.ByteVectorConversions._
 import otr.utils.Crypto
 
 import scalaz.Scalaz._
-import scalaz._
 
 case class RevealSignatureHandler(encryptedPublicKey: Encrypted, hashedPublicKey: Hash, keyPair: KeyPair, longTermKeyPair: KeyPair) extends Handler {
+
+  import otr.utils.Validate._
+
   protected def process: Process = {
     case message@RevealSignature(r, encryptedSignature, macSignature) =>
-      def invariant(predicate: => Boolean, message: String): FResult[Boolean] =
-        if (!predicate) ValidationError(message).left else \/-(true)
-
-      def invariantp(predicate: => FResult[Boolean], message: String): FResult[Boolean] =
-        predicate.flatMap(b => if (b) true.right else ValidationError(message).left)
-
-
       for {
       // Check if hash from DHCommit message is correct, by decrypting their public key
         remotePublicKeyBytes <- encryptedPublicKey.decrypt(r)
-        hashValid <- invariant(hashedPublicKey.verify(remotePublicKeyBytes), "Invalid hash")
+        hashValid <- hashedPublicKey.verify(remotePublicKeyBytes).right[Throwable].validate("Invalid hash")
 
         // Parse their public key
         remotePublicKey <- Crypto.parseECKey(remotePublicKeyBytes)
@@ -38,7 +35,7 @@ case class RevealSignatureHandler(encryptedPublicKey: Encrypted, hashedPublicKey
         signature <- Signature.create(state)
       } yield HandlerResult(
         signature,
-        this
+        DataHandler(DataState(state))
       )
   }
 }

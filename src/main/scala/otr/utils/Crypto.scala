@@ -66,6 +66,13 @@ object Crypto {
     } yield publicECKey
   }
 
+  def parseDSAKey(bytes: Array[Byte]): FResult[DSAPublicKey] = {
+    for {
+      publicKey <- parsePublicKey(bytes, "DSA")
+      publicDSAKey <- FTry(publicKey.asInstanceOf[DSAPublicKey])
+    } yield publicDSAKey
+  }
+
   def parsePublicKey(bytes: Array[Byte], algorithm: String, provider: Option[String] = None): FResult[PublicKey] = {
     for {
       keySpec <- FTry(new X509EncodedKeySpec(bytes))
@@ -77,13 +84,6 @@ object Crypto {
       })
       publicKey <- FTry(keyFactory.generatePublic(keySpec))
     } yield publicKey
-  }
-
-  def parseDSAKey(bytes: Array[Byte]): FResult[DSAPublicKey] = {
-    for {
-      publicKey <- parsePublicKey(bytes, "DSA")
-      publicDSAKey <- FTry(publicKey.asInstanceOf[DSAPublicKey])
-    } yield publicDSAKey
   }
 
   def randomBytes(size: Int): Array[Byte] = {
@@ -98,15 +98,15 @@ object Crypto {
   def verifyHash(hashArr: Array[Byte], bytes: Array[Byte]): Boolean =
     MessageDigest.isEqual(hashArr, hash(bytes))
 
-  def hash(bytes: Array[Byte]): Array[Byte] = {
-    val md = MessageDigest.getInstance("SHA-256")
+  def hash(bytes: Array[Byte], algorithm: String = "SHA-256"): Array[Byte] = {
+    val md = MessageDigest.getInstance(algorithm)
 
     md.update(bytes)
 
     md.digest()
   }
 
-  def verifyMac(key: Array[Byte], bytes: Array[Byte], v: Array[Byte]): FResult[Boolean] =
+  def verifyMac(bytes: Array[Byte], key: Array[Byte], v: Array[Byte]): FResult[Boolean] =
     hmac(bytes, key).map(mac => MessageDigest.isEqual(v, mac.take(v.length)))
 
   def hmac(bytes: Array[Byte], key: Array[Byte]): FResult[Array[Byte]] = FTry {

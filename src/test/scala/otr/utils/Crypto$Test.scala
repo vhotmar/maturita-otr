@@ -14,7 +14,7 @@ class Crypto$Test extends FunSuite {
 
     val verification = for {
       mac <- Crypto.hmac(data, key)
-      verify <- Crypto.verifyMac(key, data, mac)
+      verify <- Crypto.verifyMac(data, key, mac)
     } yield verify
 
     verification.toEither.right.value should be(true)
@@ -28,7 +28,7 @@ class Crypto$Test extends FunSuite {
 
     val verification = for {
       mac <- Crypto.hmac(data, key)
-      verify <- Crypto.verifyMac(key, data, mac.take(20))
+      verify <- Crypto.verifyMac(data, key, mac.take(20))
     } yield verify
 
     verification.toEither.right.value should be(true)

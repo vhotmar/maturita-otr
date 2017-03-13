@@ -6,8 +6,8 @@ import otr.utils.Crypto
 import scodec.bits.ByteVector
 
 case class Mac(bytes: ByteVector) {
-  def verify(key: ByteVector, v: ByteVector): FResult[Boolean] =
-    Crypto.verifyMac(key, bytes, v)
+  def verify(bytesToVerify: ByteVector, key: ByteVector): FResult[Boolean] =
+    Crypto.verifyMac(bytesToVerify, key, bytes)
 }
 
 object Mac {

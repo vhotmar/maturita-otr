@@ -12,6 +12,7 @@ case class DHKeyHandler(
 ) extends Handler {
   protected def process: Process = {
     case DHKey(theirPublicKey) =>
+      // create state and send reveal signature message
       for {
         state <- NonCompleteState.create(keyPair, theirPublicKey, longTermKeyPair)
         message <- RevealSignature.create(r, state)

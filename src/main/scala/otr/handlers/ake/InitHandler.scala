@@ -12,8 +12,10 @@ case class InitHandler(
   keyPair: KeyPair,
   longTermKeyPair: KeyPair
 ) extends Handler {
+  // get random r
   val r: Array[Byte] = Crypto.randomBytes(16)
 
+  // encoded publicKey
   val publicKeyEncoded: Array[Byte] = keyPair.getPublic.getEncoded
 
   protected def process: Process = {
@@ -31,6 +33,8 @@ case class InitHandler(
 }
 
 object InitHandler {
+  // can't use apply here - because there might be errors,
+  // while generating keyPairs
   def create(): FResult[InitHandler] =
     for {
       keyPair <- Crypto.generateECKeyPair()

@@ -2,7 +2,8 @@ package otr.messages
 
 import java.security.PublicKey
 
-import otr.{Message, MessageCompanion, Types}
+import otr.Types
+import otr.utils.{Message, MessageCompanion}
 import scodec.Codec
 import scodec.bits.{ByteVector, HexStringSyntax}
 import scodec.codecs._

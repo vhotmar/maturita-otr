@@ -1,12 +1,10 @@
 package otr.utils
 
-import java.security.PublicKey
-
-import otr.ParseError
-import otr.messages.types.Data
+import otr.{FResult, InvalidArgumentError, ParseError}
 import scodec.bits.{BitVector, ByteVector}
 import scodec.{Attempt, DecodeResult}
 
+import scalaz.Scalaz._
 import scalaz._
 
 object ByteVectorConversions {
@@ -15,12 +13,6 @@ object ByteVectorConversions {
   implicit def byteArrayToByteVector(arr: Array[Byte]): ByteVector = ByteVector.view(arr)
 }
 
-object PublicKeyConversions {
-
-  import ByteVectorConversions._
-
-  implicit def publicKeyToData(publicKey: PublicKey): Data[PublicKey] = Data(publicKey.getEncoded, publicKey)
-}
 
 object BitVectorConversions {
   implicit def bitVectorToByteArray(vec: BitVector): Array[Byte] = vec.toByteArray
@@ -34,4 +26,14 @@ object AttemptConversions {
 
   implicit def attemptToEitherDecodedResult[A](attempt: Attempt[DecodeResult[A]]): Throwable \/ A =
     attempt.fold(err => -\/(ParseError(err)), a => \/-(a.value))
+}
+
+object OptionConversions {
+  implicit def optionToOptionOps[A](option: Option[A]): OptionOps[A] = new OptionOps(option)
+
+  class OptionOps[A](option: Option[A]) {
+    def either: FResult[A] =
+      option.fold(InvalidArgumentError("Option is empty").left[A])(a => \/-(a))
+  }
+
 }

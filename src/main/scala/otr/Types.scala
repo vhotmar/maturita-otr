@@ -2,7 +2,7 @@ package otr
 
 import java.security.PublicKey
 
-import otr.messages.types.{Encrypted, Hash, Mac}
+import otr.messages.types.{Data, Encrypted, Hash, Mac}
 import otr.utils.Crypto
 import scodec.Attempt.{Failure, Successful}
 import scodec.Codec
@@ -14,6 +14,16 @@ object Types {
   import otr.utils.ByteVectorConversions._
 
   val data: Codec[ByteVector] = variableSizeBytesLong(uint32, bytes).as[ByteVector]
+
+  def bData[T](codec: Codec[T]): Codec[Data[T]] = data.exmap[Data[T]](
+    (bytes) => codec.decode(bytes.bits).map(res => Data(Some(bytes), res.value)),
+    // if there are no encoded bytes, then just encode the value
+    (data) => data.bytes.fold(
+      codec.encode(data.value).map(vec => vec.bytes)
+    )(
+      vec => Successful(vec)
+    )
+  ).as[Data[T]]
 
   val encrypted: Codec[Encrypted] = data.xmap[Encrypted](
     (bytes) => Encrypted(bytes),
