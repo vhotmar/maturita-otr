@@ -4,6 +4,7 @@ import java.io.{InputStream, InputStreamReader}
 import java.net.URL
 import java.util.ResourceBundle.Control
 import java.util.{Locale, PropertyResourceBundle, ResourceBundle}
+import javafx.scene.Parent
 import javafx.{scene => jfxs}
 
 import scalafx.Includes._
@@ -54,7 +55,7 @@ object Client extends JFXApp {
   println(getClass)
   println(getClass.getResource("/Login.fxml"))
 
-  def load(fxml: URL) = {
+  def load(fxml: URL): Parent = {
     val loader = new FXMLLoader(fxml, new DependenciesByType(Map()))
 
     loader.setResources(ResourceBundle.getBundle("Translations", new Locale("cs", "CZ"), new UTF8Control))

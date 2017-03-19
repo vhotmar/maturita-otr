@@ -15,7 +15,7 @@ object UserDoesNotExist extends MessageCompanion[UserDoesNotExist] {
   override def command: ByteVector = hex"03"
 
   override def codec(config: MessageConfig): Codec[UserDoesNotExist] = {
-    "name" | string32
+    "name" | utf8_32
   }.as[UserDoesNotExist]
 }
 

@@ -15,7 +15,7 @@ object Registered extends MessageCompanion[Registered] {
   override def command: ByteVector = hex"03"
 
   override def codec(config: MessageConfig): Codec[Registered] = {
-    ("name" | string32) :: ("id" | int32)
+    ("name" | utf8_32) :: ("id" | int32)
   }.as[Registered]
 }
 

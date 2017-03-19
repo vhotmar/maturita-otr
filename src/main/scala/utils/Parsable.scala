@@ -33,10 +33,12 @@ trait ParsableCompanion[Config, E <: Parsable[Config]] {
 }
 
 trait EParsable extends Parsable[None] {
+  self =>
 
   import otr.utils.AttemptConversions._
 
-  def companion: EParsableCompanion[E]
+  type E >: self.type <: EParsable
+  type PC = EParsableCompanion[E]
 
   def encode: FResult[BitVector] =
     companion.codec.encode(this)
@@ -57,7 +59,8 @@ trait EParsableCompanion[E <: EParsable] extends ParsableCompanion[None, E] {
 
 trait CommandParsable[Config, Hash, P <: Parsable[Config]] {
 
-  val commandCompanion: CommandParsableCompanion[Config, Hash, P, ParsableCompanion[Config, P]]
+  type CommandCompanion = CommandParsableCompanion[Config, Hash, _ <: P]
+  val commandCompanion: CommandCompanion
 
   def codec(config: Config): Codec[P] = {
     def encode(msg: P): Attempt[BitVector] = {
@@ -79,10 +82,6 @@ trait CommandParsable[Config, Hash, P <: Parsable[Config]] {
     Codec[P](encode _, decode _)
   }
 
-  def encodeHeader(msg: P, config: Config): Attempt[BitVector]
-
-  def decodeHeader(bits: BitVector, config: Config): Attempt[(Hash, BitVector)]
-
   def decodePayload(payload: BitVector, config: Config, command: Hash): Attempt[DecodeResult[P]] = {
     val cmd = commandCompanion.byCommand(command)
 
@@ -90,11 +89,18 @@ trait CommandParsable[Config, Hash, P <: Parsable[Config]] {
       if (!p.remainder.isEmpty) Failure(scodec.Err("command message length did not match"))
       else Successful(p))
   }
+
+  def encodeHeader(msg: P, config: Config): Attempt[BitVector]
+
+  def decodeHeader(bits: BitVector, config: Config): Attempt[(Hash, BitVector)]
 }
 
 trait BCommandParsable[Config, P <: Parsable[Config]] extends CommandParsable[Config, ByteVector, P] {}
 
-trait CommandParsableCompanion[Config, Hash, P <: Parsable[Config], PC <: ParsableCompanion[Config, P]] {
+trait CommandParsableCompanion[Config, Hash, P <: Parsable[Config]] {
+  type PC <: ParsableCompanion[Config, _ <: P]
+  type All = Set[PC]
+
   val all: Set[PC]
 
   val byCommand: Map[Hash, PC] = {
@@ -106,4 +112,4 @@ trait CommandParsableCompanion[Config, Hash, P <: Parsable[Config], PC <: Parsab
   def command(o: PC): Hash
 }
 
-trait BCommandParsableCompanion[Config, P <: Parsable[Config], PC <: ParsableCompanion[Config, P]] extends CommandParsableCompanion[Config, ByteVector, P, PC]
+trait BCommandParsableCompanion[Config, P <: Parsable[Config]] extends CommandParsableCompanion[Config, ByteVector, P]

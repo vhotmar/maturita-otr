@@ -8,6 +8,8 @@ import scodec.codecs.{bytes, uint16, uint32}
 import utils.{BCommandParsable, BCommandParsableCompanion}
 
 trait Message extends utils.Parsable[MessageConfig] {
+  self =>
+  type E >: self.type <: Message
   type PC = MessageCompanion[E]
 }
 
@@ -45,8 +47,9 @@ object Message extends BCommandParsable[MessageConfig, Message] {
   }
 }
 
-object MessageCompanion extends BCommandParsableCompanion[MessageConfig, Message, MessageCompanion[_]] {
-  val all = Set(Data, DHCommit, DHKey, RevealSignature, Signature)
+object MessageCompanion extends BCommandParsableCompanion[MessageConfig, Message] {
+  type PC = MessageCompanion[_ <: Message]
+  val all: All = Set(Data, DHCommit, DHKey, RevealSignature, Signature)
 
-  def command(o: MessageCompanion[_]): ByteVector = o.command
+  def command(o: MessageCompanion[_ <: Message]): ByteVector = o.command
 }

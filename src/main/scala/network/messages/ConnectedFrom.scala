@@ -15,7 +15,7 @@ object ConnectedFrom extends MessageCompanion[ConnectedFrom] {
   override def command: ByteVector = hex"02"
 
   override def codec(config: MessageConfig): Codec[ConnectedFrom] = {
-    ("remoteUserName" | string32) :: ("remoteId" | int32)
+    ("remoteUserName" | utf8_32) :: ("remoteId" | int32)
   }.as[ConnectedFrom]
 }
 

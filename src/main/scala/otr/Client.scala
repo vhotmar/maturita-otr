@@ -4,11 +4,10 @@ import _root_.utils.Results.FResult
 import otr.actions.{InitAction, ReceiveMessageAction, SendMessageAction}
 import otr.handlers.ake.{DHCommitHandler, InitHandler}
 import otr.requests.SendMessageRequest
-import otr.utils.Message
+import otr.utils.{Message, MessageConfig}
 import scodec.Codec
 
 import scalaz.Scalaz._
-import scalaz._
 
 
 class Client(
@@ -20,7 +19,7 @@ class Client(
   import otr.utils.AttemptConversions._
   import otr.utils.BitVectorConversions._
 
-  val codec: Codec[Message] = Message.codec(4, 1, 1)
+  val codec: Codec[Message] = Message.codec(MessageConfig(4, 1, 1))
 
   def receive(bytes: Array[Byte]): FResult[Message] = {
     val message: FResult[Message] = codec.decode(bytes)
@@ -47,10 +46,6 @@ class Client(
     processByHandler(InitAction())
   }
 
-  protected def encodeAndSendMessage(message: Message): Unit = {
-    codec.encode(message).foreach(vec => sender.send(vec))
-  }
-
   protected def handleAction(action: Action): FResult[Boolean] = {
     action match {
       case SendMessageAction(message) => encodeAndSendMessage(message)
@@ -59,15 +54,19 @@ class Client(
 
     true.right
   }
+
+  protected def encodeAndSendMessage(message: Message): Unit = {
+    codec.encode(message).foreach(vec => sender.send(vec))
+  }
 }
 
 object Client {
 
-  def apply(handler: Handler, sender: Sender, data: ClientData): Client = new Client(handler, sender, data)
-
   def create(sender: Sender, data: ClientData, init: Boolean = false): FResult[Client] =
     if (init) InitHandler.create().map(handler => Client(handler, sender, data))
     else DHCommitHandler.create().map(handler => Client(handler, sender, data))
+
+  def apply(handler: Handler, sender: Sender, data: ClientData): Client = new Client(handler, sender, data)
 }
 
 case class ClientData(name: String)

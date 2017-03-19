@@ -9,6 +9,7 @@ import akka.util.ByteString
 import network.messages._
 import network.server.ToWrite
 import network.server.UserManager.{UserDoesNotExists, UserExists}
+import scodec.Codec
 
 import scala.collection.mutable
 
@@ -18,9 +19,9 @@ class Client() extends Actor with ActorLogging {
   import otr.utils.BitVectorConversions._
   import otr.utils.ByteVectorConversions._
 
-  val codec = Message.codec(MessageConfig(1))
+  val codec: Codec[Message] = Message.codec(MessageConfig(1))
 
-  val listener = context.actorOf(Props[Client.Broadcaster])
+  val listener: ActorRef = context.actorOf(Props[Client.Broadcaster])
 
   def receiveListener: Actor.Receive = {
     case Client.AddListener(r) =>
@@ -30,7 +31,7 @@ class Client() extends Actor with ActorLogging {
       listener ! Client.Broadcaster.Remove(r)
   }
 
-  def receive = receiveListener orElse {
+  def receive: Actor.Receive = receiveListener orElse {
     case c@Client.Connect(addr) =>
       IO(Tcp) ! Connect(addr)
 
@@ -57,7 +58,7 @@ class Client() extends Actor with ActorLogging {
         .encode(message)
         .toOption
         .foreach(f =>
-          connection ! Write(ByteString(f)))
+          connection ! Write(ByteString(f: Array[Byte])))
 
     case Received(data) =>
       codec

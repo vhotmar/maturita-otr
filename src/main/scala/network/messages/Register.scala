@@ -15,7 +15,7 @@ object Register extends MessageCompanion[Register] {
   override def command: ByteVector = hex"03"
 
   override def codec(config: MessageConfig): Codec[Register] = {
-    "name" | string32
+    "name" | utf8_32
   }.as[Register]
 }
 

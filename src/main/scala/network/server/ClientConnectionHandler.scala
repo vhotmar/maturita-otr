@@ -4,16 +4,17 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.io.Tcp._
 import akka.util.ByteString
 import network.{Message, MessageConfig}
+import scodec.Codec
 
 class ClientConnectionHandler(private val connection: ActorRef, private val server: ActorRef, private val userManager: ActorRef)
   extends Actor with ActorLogging {
 
   import otr.utils.BitVectorConversions._
 
-  val codec = Message.codec(MessageConfig(1))
-  val client = context.actorOf(ClientHandler.props(self, userManager))
+  val codec: Codec[Message] = Message.codec(MessageConfig(1))
+  val client: ActorRef = context.actorOf(ClientHandler.props(self, userManager))
 
-  def receive = {
+  def receive: Actor.Receive = {
     case Received(data) =>
       codec
         .decode(data.toArray)
@@ -25,7 +26,7 @@ class ClientConnectionHandler(private val connection: ActorRef, private val serv
         .encode(message)
         .toOption
         .foreach(f =>
-          connection ! Write(ByteString(f)))
+          connection ! Write(ByteString(f: Array[Byte])))
 
 
     case PeerClosed => stop()
@@ -35,7 +36,7 @@ class ClientConnectionHandler(private val connection: ActorRef, private val serv
     case Aborted => stop()
   }
 
-  def stop() = {
+  def stop(): Unit = {
     client ! ClientHandler.End()
 
     context stop self
