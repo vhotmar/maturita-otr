@@ -1,7 +1,14 @@
+package utils
 import scalaz.\/
 
-package object otr {
+object Results {
+
+  case class None()
+
+  case class Success()
+
   type FResult[A] = Throwable \/ A
+  type SResult = FResult[Success]
 
   object FTry {
     def apply[T](a: => T): FResult[T] = {

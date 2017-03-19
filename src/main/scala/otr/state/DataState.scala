@@ -2,11 +2,12 @@ package otr.state
 
 import java.security.{KeyPair, PublicKey}
 
+import otr.State
 import otr.messages.Data
 import otr.messages.data.DataT
 import otr.messages.types.{Encrypted, Mac}
 import otr.utils.Crypto
-import otr.{FResult, FTry, State}
+import utils.Results.{FResult, FTry}
 
 case class DataState(
   localLongTermKeyPair: KeyPair,
@@ -15,44 +16,6 @@ case class DataState(
   remoteDHPublicKey: (Int, PublicKey),
   counter: Array[Byte]
 ) {
-
-  private def h1(secret: Array[Byte], byte: Byte): Array[Byte] =
-    Crypto.hash(byte +: secret, "SHA-1")
-
-  private def generateSendingKeys(localKeyId: Int, remoteKeyId: Int, secret: Array[Byte]): (Array[Byte], Array[Byte]) = {
-    // TODO: may cause problems
-    val byte: Byte = if (localKeyId > remoteKeyId || localKeyId == remoteKeyId) 0x01 else 0x02
-
-    val aes = h1(secret, byte).take(16)
-    val mac = Crypto.hash(aes, "SHA-1").take(20)
-
-    (aes, mac)
-  }
-
-  private def generateReceivingKeys(localKeyId: Int, remoteKeyId: Int, secret: Array[Byte]): (Array[Byte], Array[Byte]) = {
-    val byte: Byte = if (localKeyId > remoteKeyId && localKeyId != remoteKeyId) 0x02 else 0x01
-
-    val aes = h1(secret, byte).take(16)
-    val mac = Crypto.hash(aes, "SHA-1").take(20)
-
-    (aes, mac)
-  }
-
-  private def increaseCounter(counter: Array[Byte]): Array[Byte] = {
-    // increase counter as specified in otr4j
-    val cloned = counter.clone()
-
-    for (i <- 7 to 0) {
-      val c = cloned(i)
-
-      cloned(i) = (c + 1).toByte
-
-      if (c == 0)
-        return cloned
-    }
-
-    cloned
-  }
 
   def sendMessage(message: Array[Byte]): FResult[(DataState, Data)] = {
     import otr.utils.ByteVectorConversions._
@@ -90,6 +53,35 @@ case class DataState(
     } yield (newState, message)
   }
 
+  private def generateSendingKeys(localKeyId: Int, remoteKeyId: Int, secret: Array[Byte]): (Array[Byte], Array[Byte]) = {
+    // TODO: may cause problems
+    val byte: Byte = if (localKeyId > remoteKeyId || localKeyId == remoteKeyId) 0x01 else 0x02
+
+    val aes = h1(secret, byte).take(16)
+    val mac = Crypto.hash(aes, "SHA-1").take(20)
+
+    (aes, mac)
+  }
+
+  private def h1(secret: Array[Byte], byte: Byte): Array[Byte] =
+    Crypto.hash(byte +: secret, "SHA-1")
+
+  private def increaseCounter(counter: Array[Byte]): Array[Byte] = {
+    // increase counter as specified in otr4j
+    val cloned = counter.clone()
+
+    for (i <- 7 to 0) {
+      val c = cloned(i)
+
+      cloned(i) = (c + 1).toByte
+
+      if (c == 0)
+        return cloned
+    }
+
+    cloned
+  }
+
   def receiveMessage(message: Data): FResult[(DataState, Array[Byte])] = {
     import otr.utils.ByteVectorConversions._
     import otr.utils.OptionConversions._
@@ -121,7 +113,25 @@ case class DataState(
         // remove keys, which are the other side not going to use
         localDHKeyPairs = localDHKeyPairs.filter(x => x._1 >= dataT.receiverKeyId)
       )
+
+    // decryptedMessage.indexOf(0x00.toByte)
     } yield (newState, decryptedMessage)
+  }
+
+  private def generateReceivingKeys(localKeyId: Int, remoteKeyId: Int, secret: Array[Byte]): (Array[Byte], Array[Byte]) = {
+    val byte: Byte = if (localKeyId > remoteKeyId && localKeyId != remoteKeyId) 0x02 else 0x01
+
+    val aes = h1(secret, byte).take(16)
+    val mac = Crypto.hash(aes, "SHA-1").take(20)
+
+    (aes, mac)
+  }
+
+  def getTLV(message: Array[Byte]) = {
+    val (finalMessage, t) = message.span(_ == 0x00.toByte)
+    val tlvs = t.tail
+
+    //scodec.codecs.list()
   }
 }
 

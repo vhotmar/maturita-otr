@@ -2,8 +2,8 @@ package otr.handlers.ake
 
 import java.security.KeyPair
 
-import otr._
 import otr.messages.{DHKey, RevealSignature}
+import otr.{Handler, HandlerResult, NonCompleteState}
 
 case class DHKeyHandler(
   r: Array[Byte],

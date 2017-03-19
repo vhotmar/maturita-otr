@@ -4,7 +4,8 @@ import java.security.KeyPair
 
 import otr.messages.{DHCommit, DHKey}
 import otr.utils.Crypto
-import otr.{FResult, Handler, HandlerResult}
+import otr.{Handler, HandlerResult}
+import utils.Results.FResult
 
 import scalaz.Scalaz._
 

@@ -3,7 +3,7 @@ package otr.messages
 import java.security.PublicKey
 
 import otr.Types
-import otr.utils.{Message, MessageCompanion}
+import otr.utils.{Message, MessageCompanion, MessageConfig}
 import scodec.Codec
 import scodec.bits.{ByteVector, HexStringSyntax}
 import scodec.codecs._
@@ -15,7 +15,7 @@ case class DHKey(publicKey: PublicKey) extends Message {
 }
 
 case object DHKey extends MessageCompanion[DHKey] {
-  def codec(version: Int): Codec[DHKey] = {
+  def codec(config: MessageConfig): Codec[DHKey] = {
     "publicKey" | Types.publicECKey
   }.as[DHKey]
 

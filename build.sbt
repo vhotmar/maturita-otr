@@ -15,7 +15,13 @@ libraryDependencies ++= Seq(
   "org.scodec" % "scodec-bits_2.11" % "1.1.4",
   "org.scodec" % "scodec-core_2.11" % "1.10.3",
   "org.scalaz" %% "scalaz-core" % "7.2.9",
-  "org.scalafx" %% "scalafx" % "8.0.102-R11"
+  "org.scalafx" %% "scalafx" % "8.0.102-R11",
+  "com.typesafe.akka" %% "akka-actor" % "2.4.17",
+  "com.typesafe.akka" %% "akka-agent" % "2.4.17",
+  "com.typesafe.akka" %% "akka-remote" % "2.4.17",
+  "org.scalafx" %% "scalafxml-core-sfx8" % "0.3"
 )
+
+addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
 
 initialCommands := "import example._"

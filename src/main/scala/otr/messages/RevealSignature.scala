@@ -1,11 +1,11 @@
 package otr.messages
 
+import _root_.utils.Results.FResult
 import otr._
 import otr.messages.data.DataX
 import otr.messages.types.{Encrypted, Mac}
-import otr.utils.BitVectorConversions._
 import otr.utils.ByteVectorConversions._
-import otr.utils.{Crypto, Message, MessageCompanion}
+import otr.utils.{Crypto, Message, MessageCompanion, MessageConfig}
 import scodec.Codec
 import scodec.bits.{ByteVector, HexStringSyntax}
 import scodec.codecs._
@@ -34,7 +34,8 @@ trait SignatureData {
   }
 
   def validate(mac: Array[Byte]): FResult[Boolean] =
-    macSignature.verify(encryptedSignature.bytes, mac)
+    macSignature
+      .verify(encryptedSignature.bytes, mac)
       .validate("Invalid signature data")
 }
 
@@ -49,7 +50,10 @@ case class RevealSignature(
 }
 
 object RevealSignature extends MessageCompanion[RevealSignature] {
-  def codec(version: Int): Codec[RevealSignature] = {
+
+  import otr.utils.BitVectorConversions._
+
+  def codec(config: MessageConfig): Codec[RevealSignature] = {
     ("revealedKey" | Types.data) ::
       ("encryptedSignature" | Types.encrypted) ::
       ("macSignature" | Types.mac(20))

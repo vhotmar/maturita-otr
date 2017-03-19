@@ -1,6 +1,7 @@
 package otr.utils
 
-import otr.{FResult, ValidationError}
+import otr.ValidationError
+import utils.Results.FResult
 
 import scalaz.Scalaz._
 

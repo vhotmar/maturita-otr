@@ -8,8 +8,8 @@ import javax.crypto.{Cipher, KeyAgreement, Mac}
 
 import org.bouncycastle.jce.ECNamedCurveTable
 import org.bouncycastle.jce.interfaces.ECPublicKey
-import otr.{FResult, FTry}
 import scodec.bits.HexStringSyntax
+import utils.Results.{FResult, FTry}
 
 object Crypto {
   val AESAlgorithm: String = "AES/CTR/NoPadding"

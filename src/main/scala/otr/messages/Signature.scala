@@ -1,14 +1,15 @@
 package otr.messages
 
-import otr._
 import otr.messages.data.DataX
 import otr.messages.types.{Encrypted, Mac}
 import otr.utils.BitVectorConversions._
 import otr.utils.ByteVectorConversions._
-import otr.utils.{Crypto, Message, MessageCompanion}
+import otr.utils.{Crypto, Message, MessageCompanion, MessageConfig}
+import otr.{State, Types}
 import scodec.Codec
 import scodec.bits.{ByteVector, HexStringSyntax}
 import scodec.codecs._
+import utils.Results.FResult
 
 case class Signature(encryptedSignature: Encrypted, macSignature: Mac) extends Message with SignatureData {
   type E = Signature
@@ -17,7 +18,7 @@ case class Signature(encryptedSignature: Encrypted, macSignature: Mac) extends M
 }
 
 object Signature extends MessageCompanion[Signature] {
-  def codec(version: Int): Codec[Signature] = {
+  def codec(config: MessageConfig): Codec[Signature] = {
     ("encryptedSignature" | Types.encrypted) ::
       ("macSignature" | Types.mac(20))
   }.as[Signature]

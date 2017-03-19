@@ -1,7 +1,8 @@
 import java.security.Security
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import otr._
+import otr.{Client, ClientData, Receiver, Sender}
+import utils.Results.FResult
 
 import scalaz.Scalaz._
 
@@ -72,7 +73,7 @@ object MockChannelProvider {
     def disableLogging: Unit = enabledLogging = false
   }
 
-  def createChannel(): Tuple2[Sender, MockReceiverManager] = {
+  def createChannel(): (MockSender, MockReceiverManager) = {
     val manager = new MockReceiverManager
 
     (new MockSender(manager), manager)

@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ScalaCompilerConfiguration">
     <profile name="SBT 1" modules="maturita">
-      <option name="implicitConversions" value="true" />
+      <plugins>
+        <plugin path="$USER_HOME$/.ivy2/cache/org.scalamacros/paradise_2.11.2/jars/paradise_2.11.2-2.1.0.jar" />
+      </plugins>
     </profile>
   </component>
 </project>

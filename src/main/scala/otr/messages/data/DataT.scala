@@ -4,10 +4,10 @@ import java.security.PublicKey
 
 import otr.Types
 import otr.messages.types.Encrypted
-import otr.utils.{Parsable, ParsableCompanion}
 import scodec.Codec
 import scodec.bits.ByteVector
 import scodec.codecs._
+import utils.{EParsable, EParsableCompanion}
 
 case class DataT(
   senderKeyId: Int,
@@ -15,13 +15,13 @@ case class DataT(
   nextPublicKey: PublicKey,
   counter: ByteVector,
   encrypted: Encrypted
-) extends Parsable {
+) extends EParsable {
   type E = DataT
 
   def companion = DataT
 }
 
-object DataT extends ParsableCompanion[DataT] {
+object DataT extends EParsableCompanion[DataT] {
   def codec: Codec[DataT] = {
     ("senderKeyId" | int32) ::
       ("receiver" | int32) ::

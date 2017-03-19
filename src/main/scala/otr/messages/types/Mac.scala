@@ -1,9 +1,9 @@
 package otr.messages.types
 
-import otr.FResult
 import otr.utils.ByteVectorConversions._
 import otr.utils.Crypto
 import scodec.bits.ByteVector
+import utils.Results.FResult
 
 case class Mac(bytes: ByteVector) {
   def verify(bytesToVerify: ByteVector, key: ByteVector): FResult[Boolean] =

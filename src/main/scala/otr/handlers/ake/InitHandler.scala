@@ -2,11 +2,13 @@ package otr.handlers.ake
 
 import java.security.KeyPair
 
+import otr.actions.InitAction
 import otr.messages.DHCommit
 import otr.messages.types.{Encrypted, Hash}
 import otr.utils.ByteVectorConversions._
 import otr.utils.Crypto
-import otr.{FResult, Handler, HandlerResult}
+import otr.{Handler, HandlerResult}
+import utils.Results.FResult
 
 case class InitHandler(
   keyPair: KeyPair,
@@ -19,7 +21,8 @@ case class InitHandler(
   val publicKeyEncoded: Array[Byte] = keyPair.getPublic.getEncoded
 
   protected def process: Process = {
-    case _ =>
+    // on init action send first message
+    case InitAction() =>
       for {
         encrypted <- Encrypted.create(publicKeyEncoded, r)
       } yield HandlerResult(

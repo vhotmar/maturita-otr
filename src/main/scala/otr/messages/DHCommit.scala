@@ -2,7 +2,7 @@ package otr.messages
 
 import otr._
 import otr.messages.types.{Encrypted, Hash}
-import otr.utils.{Message, MessageCompanion}
+import otr.utils.{Message, MessageCompanion, MessageConfig}
 import scodec.Codec
 import scodec.bits.{ByteVector, HexStringSyntax}
 import scodec.codecs._
@@ -14,7 +14,7 @@ case class DHCommit(encryptedPublicKey: Encrypted, hashedPublicKey: Hash) extend
 }
 
 case object DHCommit extends MessageCompanion[DHCommit] {
-  def codec(version: Int): Codec[DHCommit] = {
+  def codec(config: MessageConfig): Codec[DHCommit] = {
     ("encryptedPublicKey" | Types.encrypted) ::
       ("hashedPublicKey" | Types.hash)
   }.as[DHCommit]

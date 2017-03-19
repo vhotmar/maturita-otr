@@ -2,6 +2,7 @@ package otr
 
 import java.security.{KeyPair, PrivateKey, PublicKey}
 
+import _root_.utils.Results.FResult
 import otr.utils.Crypto
 
 trait PartialPublic {
@@ -50,7 +51,7 @@ object Parameters {
     // is already encoded (probably in different format then MPI - because EC works
     // with different format
     def h2(byte: Byte): Array[Byte] =
-      Crypto.hash(byte +: secret)
+    Crypto.hash(byte +: secret)
 
     val ssid = h2(0x00).take(8)
     val (c, cp) = h2(0x01).splitAt(16)

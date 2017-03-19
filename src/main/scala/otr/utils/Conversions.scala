@@ -1,8 +1,11 @@
 package otr.utils
 
-import otr.{FResult, InvalidArgumentError, ParseError}
+import java.security.Key
+
+import otr.{InvalidArgumentError, ParseError}
 import scodec.bits.{BitVector, ByteVector}
 import scodec.{Attempt, DecodeResult}
+import utils.Results.FResult
 
 import scalaz.Scalaz._
 import scalaz._
@@ -34,6 +37,15 @@ object OptionConversions {
   class OptionOps[A](option: Option[A]) {
     def either: FResult[A] =
       option.fold(InvalidArgumentError("Option is empty").left[A])(a => \/-(a))
+  }
+
+}
+
+object KeyConversions {
+  implicit def keyToKeyOps(key: Key): KeyOps = new KeyOps(key)
+
+  class KeyOps(key: Key) {
+    def getFingerprint: Array[Byte] = Crypto.hash(key.getEncoded, "SHA-1")
   }
 
 }

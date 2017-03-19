@@ -1,80 +1,63 @@
 package otr
 
-import otr.actions.{ReceiveMessageAction, SendMessageAction}
+import _root_.utils.Results.FResult
+import otr.actions.{InitAction, ReceiveMessageAction, SendMessageAction}
 import otr.handlers.ake.{DHCommitHandler, InitHandler}
-import otr.messages.Empty
 import otr.requests.SendMessageRequest
 import otr.utils.Message
 import scodec.Codec
 
+import scalaz.Scalaz._
+import scalaz._
 
-class Client(var handler: Handler, sender: Sender, data: ClientData) extends Receiver {
+
+class Client(
+  var handler: Handler,
+  sender: Sender,
+  data: ClientData
+) extends Receiver with HandlerManager {
 
   import otr.utils.AttemptConversions._
   import otr.utils.BitVectorConversions._
 
   val codec: Codec[Message] = Message.codec(4, 1, 1)
-  var requests: List[Request] = List.empty
 
   def receive(bytes: Array[Byte]): FResult[Message] = {
     val message: FResult[Message] = codec.decode(bytes)
 
-    message.foreach(handleMessage)
-
     message
+      .flatMap(msg => processByHandler(msg).map(_ => msg))
   }
 
-  def initialized: Boolean = handler.canHandleRequest(SendMessageRequest(Array.empty[Byte]))
+  def initialized: Boolean = handler.canHandle(SendMessageRequest(Array.empty[Byte]))
 
-  def send(bytes: Array[Byte]): Unit = {
+  def send(bytes: Array[Byte]): FResult[Boolean] = {
     val request = SendMessageRequest(bytes)
 
-    if (handler.canHandleRequest(request))
-      handler
-        .handleRequest(request)
-        .fold(e => throw e, handleHandlerResult)
-    else
-      requests = requests :+ request
+    if (handler.canHandle(request))
+      processByHandler(request)
+    else {
+      queue(request)
+
+      true.right
+    }
   }
 
   def init(): Unit = {
-    codec.encode(Empty()).foreach(msg => receive(msg))
-  }
-
-  protected def handleMessage(message: Message): Unit = {
-    handler
-      .handle(message)
-      .fold(e => throw e, handleHandlerResult)
-  }
-
-  protected def handleHandlerResult(result: HandlerResult): Unit = {
-    // need to keep handler synchronized - we should not need it,
-    // but just in case keep it here
-    // TODO: investigate where to put synchronized - probably not here
-    synchronized({
-      this.setHandler(result.newHandler)
-    })
-
-    result.actions.foreach({
-      case SendMessageAction(message) => encodeAndSendMessage(message)
-      case ReceiveMessageAction(d) => println("Received message:", new String(d))
-    })
+    processByHandler(InitAction())
   }
 
   protected def encodeAndSendMessage(message: Message): Unit = {
     codec.encode(message).foreach(vec => sender.send(vec))
   }
 
-  protected def setHandler(newHandler: Handler): Unit = {
-    handler = newHandler
+  protected def handleAction(action: Action): FResult[Boolean] = {
+    action match {
+      case SendMessageAction(message) => encodeAndSendMessage(message)
+      case ReceiveMessageAction(d) => println("Received message:", new String(d))
+    }
 
-    val (canHandle, cantHandle) = requests.partition(handler.canHandleRequest(_))
-
-    requests = cantHandle
-
-    val handled = canHandle.flatMap(handler.handleRequest(_).toOption)
-
-    handled.foreach(handleHandlerResult)
+    true.right
   }
 }
 
@@ -87,8 +70,6 @@ object Client {
     else DHCommitHandler.create().map(handler => Client(handler, sender, data))
 }
 
-case class ClientData(name: String) {
-
-}
+case class ClientData(name: String)
 
 

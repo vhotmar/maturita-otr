@@ -3,7 +3,7 @@ package otr.messages
 import otr.Types
 import otr.messages.data.DataT
 import otr.messages.types.Mac
-import otr.utils.{Message, MessageCompanion}
+import otr.utils.{Message, MessageCompanion, MessageConfig}
 import scodec.Codec
 import scodec.bits.{ByteVector, HexStringSyntax}
 import scodec.codecs._
@@ -20,7 +20,7 @@ case class Data(
 }
 
 object Data extends MessageCompanion[Data] {
-  def codec(version: Int): Codec[Data] = {
+  def codec(config: MessageConfig): Codec[Data] = {
     ("flags" | byte) ::
       ("dataT" | Types.bData(DataT.codec)) ::
       ("mac" | Types.mac(20))
