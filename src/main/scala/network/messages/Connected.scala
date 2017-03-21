@@ -12,7 +12,7 @@ case class Connected(remoteUserName: String, remoteId: Int) extends Message {
 }
 
 object Connected extends MessageCompanion[Connected] {
-  override def command: ByteVector = hex"02"
+  override def command: ByteVector = hex"01"
 
   override def codec(config: MessageConfig): Codec[Connected] = {
     ("remoteUserName" | utf8_32) :: ("remoteId" | int32)

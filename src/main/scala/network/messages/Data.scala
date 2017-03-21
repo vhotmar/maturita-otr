@@ -13,7 +13,7 @@ case class Data(remoteId: Int, message: ByteVector) extends Message {
 }
 
 object Data extends MessageCompanion[Data] {
-  override def command: ByteVector = hex"03"
+  override def command: ByteVector = hex"04"
 
   override def codec(config: MessageConfig): Codec[Data] = {
     ("remoteId" | int32) :: ("message" | Types.data)

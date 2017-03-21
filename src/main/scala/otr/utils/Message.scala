@@ -47,9 +47,10 @@ object Message extends BCommandParsable[MessageConfig, Message] {
   }
 }
 
-object MessageCompanion extends BCommandParsableCompanion[MessageConfig, Message] {
+object MessageCompanion extends {
+  val all: Set[MessageCompanion[_ <: Message]] = Set(Data, DHCommit, DHKey, RevealSignature, Signature)
+} with BCommandParsableCompanion[MessageConfig, Message] {
   type PC = MessageCompanion[_ <: Message]
-  val all: All = Set(Data, DHCommit, DHKey, RevealSignature, Signature)
 
   def command(o: MessageCompanion[_ <: Message]): ByteVector = o.command
 }

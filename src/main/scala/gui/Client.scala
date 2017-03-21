@@ -1,74 +1,44 @@
 package gui
 
-import java.io.{InputStream, InputStreamReader}
 import java.net.URL
-import java.util.ResourceBundle.Control
-import java.util.{Locale, PropertyResourceBundle, ResourceBundle}
+import java.util.{Locale, ResourceBundle}
 import javafx.scene.Parent
 import javafx.{scene => jfxs}
 
 import scalafx.Includes._
 import scalafx.application.JFXApp
+import scalafx.beans.property.StringProperty
 import scalafx.scene.Scene
 import scalafxml.core.{DependenciesByType, FXMLLoader}
 
 
-// Transformed into scala from:
-// http://stackoverflow.com/questions/4659929/how-to-use-utf-8-in-resource-properties-with-resourcebundle
-class UTF8Control extends Control {
-  override def newBundle(baseName: String, locale: Locale, format: String, loader: ClassLoader, reload: Boolean): ResourceBundle = {
-    val bundleName = toBundleName(baseName, locale)
-    val resourceName = toResourceName(bundleName, "properties")
+object Client extends JFXApp with Router with MessageHandler {
 
-    var bundle: ResourceBundle = null
-    var stream: InputStream = null
+  val routes = Map(
+    //"chats" -> FXML.load("/Chats.fxml"),
+    //"loading" -> FXML.load("/Loading.fxml"),
+    "login" -> FXML.load("/Login.fxml")
+  )
 
-    if (reload) {
-      val url = loader.getResource(resourceName)
+  val currentRoute = StringProperty("login")
 
-      if (url != null) {
-        val connection = url.openConnection()
+  val styles = List(
+    getClass.getResource("/styles.css").toExternalForm,
+    "https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic&subset=latin"
+  )
 
-        if (connection != null) {
-          connection.setUseCaches(false)
-          stream = connection.getInputStream
-        }
-      }
-    } else {
-      stream = loader.getResourceAsStream(resourceName)
-    }
-
-    if (stream != null) {
-      try {
-        bundle = new PropertyResourceBundle(new InputStreamReader(stream, "UTF-8"))
-      } finally {
-        stream.close()
-      }
-    }
-
-    bundle
-  }
-}
-
-
-object Client extends JFXApp {
-  println(getClass)
-  println(getClass.getResource("/Login.fxml"))
-
-  def load(fxml: URL): Parent = {
-    val loader = new FXMLLoader(fxml, new DependenciesByType(Map()))
-
-    loader.setResources(ResourceBundle.getBundle("Translations", new Locale("cs", "CZ"), new UTF8Control))
-
-    loader.load()
-    loader.getRoot[jfxs.Parent]()
+  def changeRoute(parent: Parent): Unit = {
+    stage.scene = new Scene(parent)
   }
 
   stage = new JFXApp.PrimaryStage {
+    resizable = false
     title.value = "Hello Stage"
-    width = 600
+    maxWidth = 450
     scene = new Scene(
-      load(getClass.getResource("/Login.fxml"))
-    )
+      route._1
+    ) {
+      stylesheets = styles
+    }
   }
 }

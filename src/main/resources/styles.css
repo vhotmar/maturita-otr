@@ -1,0 +1,60 @@
+.root {
+
+    -fx-body-color: #fff;
+
+    -fx-outer-border: #cecece;
+    -fx-font-family: Lato;
+}
+
+.validation {
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-background-color: #fff;
+    -fx-border-color: #db2828;
+    -fx-padding: 7 10;
+}
+
+.validation .label {
+    -fx-text-fill: #db2828;
+    -fx-font-family: Lato;
+    -fx-font-weight: bold;
+}
+
+.text-field {
+    -fx-padding: 9.5 14;
+    -fx-text-alignment: left;
+    -fx-border-color: rgba(34, 36, 38, .15);
+    -fx-background-color: #fff;
+    -fx-text-fill: rgba(0, 0, 0, 0.87);
+    -fx-border-radius: 4;
+}
+
+.text-field:focused {
+    -fx-border-color: #85b7d9;
+    -fx-text-fill: rgba(0, 0, 0, 0.8);
+}
+
+.text-field.error {
+    -fx-border-color: #e0b4b4;
+    -fx-text-fill: #9f4a38;
+}
+
+.button {
+    -fx-padding: 9.5 14;
+    -fx-border-width: 0;
+    -fx-background-color: #2185d0;
+    -fx-text-fill: #fff;
+    -fx-effect: dropshadow(gaussian, rgba(34, 36,38,0.15), 0, 0, 0, 0);
+}
+
+.button:hover {
+    -fx-background-color: #1678c2;
+}
+
+.loader {
+    -fx-progress-color: #2185d0;
+}
+
+#loading {
+    -fx-background-color: #ffffffe8;
+}

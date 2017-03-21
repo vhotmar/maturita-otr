@@ -12,7 +12,7 @@ case class Disconnect(remoteId: Int) extends Message {
 }
 
 object Disconnect extends MessageCompanion[Disconnect] {
-  override def command: ByteVector = hex"03"
+  override def command: ByteVector = hex"05"
 
   override def codec(config: MessageConfig): Codec[Disconnect] = {
     "remoteId" | int32

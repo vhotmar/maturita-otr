@@ -39,6 +39,7 @@ object App {
     alice.send("nice".getBytes)
     alice.send("nice".getBytes)
     alice.send("nice".getBytes)
+    bReceiverManager.disableLogging
   }
 }
 

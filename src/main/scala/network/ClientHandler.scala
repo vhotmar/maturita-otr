@@ -5,8 +5,14 @@ import java.net.InetSocketAddress
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import network.Client._
 
+import scala.collection.mutable
+
 class ClientHandler(client: ActorRef, listenerActor: ActorRef) {
   client ! Client.AddListener(listenerActor)
+
+  def addListener(listener: ClientListener) = listenerActor ! ClientHandler.AddListener(listener)
+
+  def removeListener(listener: ClientListener) = listenerActor ! ClientHandler.RemoveListener(listener)
 
   def connect(address: InetSocketAddress) = client ! Client.Connect(address)
 
@@ -23,23 +29,35 @@ object ClientHandler {
   def apply(client: ActorRef)(implicit actorSystem: ActorSystem) =
     new ClientHandler(client, actorSystem.actorOf(Props[ClientListenerActor]))
 
-  class ClientListenerActor(listener: ClientListener) extends Actor {
+  case class AddListener(listener: ClientListener)
+
+  case class RemoveListener(listener: ClientListener)
+
+  class ClientListenerActor() extends Actor {
     def receive = {
-      case Connect(addr) => listener.connecting(addr)
-      case Connected() => listener.connected()
-      case ConnectionFailed() => listener.connectionFailed()
-      case Registered(name, id) => listener.registered(name, id)
-      case NameAlreadyRegistered(name) => listener.nameTaken(name)
-      case ConnectTo(name) => listener.connectingTo(name)
-      case SendMessage(id, message) => listener.sendingMessage(id, message)
-      case Disconnect(id) => listener.disconnect()
-      case Disconnected(id) => listener.disconnected()
-      case UserDoesNotExists(name) => listener.userDoesNotExists(name)
-      case ConnectedToUser(name, id) => listener.connectedToUser(name, id)
-      case ConnectionFromUser(name, id) => listener.connectionFromUser(name, id)
-      case ConnectionClosed() => listener.connectionClosed()
-      case ReceivedData(id, message) => listener.receivedMessage(id, message)
+      case ClientHandler.AddListener(c) =>
+        listeners += c
+
+      case ClientHandler.RemoveListener(c) =>
+        listeners -= c
+
+      case Connect(addr) => listeners.foreach(_.connecting(addr))
+      case Connected() => listeners.foreach(_.connected())
+      case ConnectionFailed() => listeners.foreach(_.connectionFailed())
+      case Registered(name, id) => listeners.foreach(_.registered(name, id))
+      case NameAlreadyRegistered(name) => listeners.foreach(_.nameTaken(name))
+      case ConnectTo(name) => listeners.foreach(_.connectingTo(name))
+      case SendMessage(id, message) => listeners.foreach(_.sendingMessage(id, message))
+      case Disconnect(id) => listeners.foreach(_.disconnect())
+      case Disconnected(id) => listeners.foreach(_.disconnected())
+      case UserDoesNotExists(name) => listeners.foreach(_.userDoesNotExists(name))
+      case ConnectedToUser(name, id) => listeners.foreach(_.connectedToUser(name, id))
+      case ConnectionFromUser(name, id) => listeners.foreach(_.connectionFromUser(name, id))
+      case ConnectionClosed() => listeners.foreach(_.connectionClosed())
+      case ReceivedData(id, message) => listeners.foreach(_.receivedMessage(id, message))
     }
+
+    def listeners: mutable.Set[ClientListener] = mutable.Set.empty
   }
 
 }

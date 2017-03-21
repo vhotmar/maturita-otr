@@ -12,7 +12,7 @@ case class Register(name: String) extends Message {
 }
 
 object Register extends MessageCompanion[Register] {
-  override def command: ByteVector = hex"03"
+  override def command: ByteVector = hex"07"
 
   override def codec(config: MessageConfig): Codec[Register] = {
     "name" | utf8_32

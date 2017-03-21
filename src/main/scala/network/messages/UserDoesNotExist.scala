@@ -12,7 +12,7 @@ case class UserDoesNotExist(name: String) extends Message {
 }
 
 object UserDoesNotExist extends MessageCompanion[UserDoesNotExist] {
-  override def command: ByteVector = hex"03"
+  override def command: ByteVector = hex"09"
 
   override def codec(config: MessageConfig): Codec[UserDoesNotExist] = {
     "name" | utf8_32
