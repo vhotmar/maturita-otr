@@ -29,3 +29,9 @@ class Server(address: InetSocketAddress) extends Actor with ActorLogging {
 
   }
 }
+
+object Server {
+  def props(address: InetSocketAddress): Props = {
+    Props(classOf[Server], address)
+  }
+}

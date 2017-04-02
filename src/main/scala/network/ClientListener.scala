@@ -3,6 +3,8 @@ package network
 import java.net.InetSocketAddress
 
 trait ClientListener {
+  def registering(name: String): Unit = {}
+
   def receivedMessage(id: Int, message: Array[Byte]): Unit = {}
 
   def connectionClosed(): Unit = {}
@@ -13,7 +15,7 @@ trait ClientListener {
 
   def userDoesNotExists(name: String): Unit = {}
 
-  def disconnected(): Unit = {}
+  def disconnected(id: Int): Unit = {}
 
   def disconnect(): Unit = {}
 

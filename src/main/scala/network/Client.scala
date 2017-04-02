@@ -8,7 +8,6 @@ import akka.io.{IO, Tcp}
 import akka.util.ByteString
 import network.messages._
 import network.server.ToWrite
-import network.server.UserManager.{UserDoesNotExists, UserExists}
 import scodec.Codec
 
 import scala.collection.mutable
@@ -33,6 +32,7 @@ class Client() extends Actor with ActorLogging {
 
   def receive: Actor.Receive = receiveListener orElse {
     case c@Client.Connect(addr) =>
+      log.debug(s"Client connecting to $addr")
       IO(Tcp) ! Connect(addr)
 
       listener ! c
@@ -42,18 +42,23 @@ class Client() extends Actor with ActorLogging {
 
   def connecting: Actor.Receive = receiveListener orElse {
     case CommandFailed(_) =>
+      log.debug(s"Connection failed")
       listener ! Client.ConnectionFailed()
 
       context become receive
 
     case c@Tcp.Connected(remote, local) =>
+      log.debug(s"Successfully connected")
       listener ! Client.Connected()
 
-      context become connected(sender())
+      sender ! Tcp.Register(self)
+
+      context become connected(sender)
   }
 
   def receiveMessage(connection: ActorRef): Actor.Receive = receiveListener orElse {
     case ToWrite(message) =>
+      log.debug(s"Client sending $message")
       codec
         .encode(message)
         .toOption
@@ -61,10 +66,14 @@ class Client() extends Actor with ActorLogging {
           connection ! Write(ByteString(f: Array[Byte])))
 
     case Received(data) =>
+      log.debug(s"Client received $data")
       codec
         .decode(data.toArray)
         .toOption
-        .foreach(m => self ! m.value)
+        .foreach(m => {
+          log.debug(s"Client parsed received data ${m.value}")
+          self ! m.value
+        })
   }
 
 
@@ -86,9 +95,12 @@ class Client() extends Actor with ActorLogging {
       context become registered(connection, name, id)
 
     case UserExists(name) =>
+      log.debug("User already exists")
       listener ! Client.NameAlreadyRegistered(name)
 
       context become connected(connection)
+
+    case e => log.debug(s"$e")
   }
 
   def registered(connection: ActorRef, name: String, id: Int): Actor.Receive = receiveMessage(connection) orElse {
@@ -110,7 +122,7 @@ class Client() extends Actor with ActorLogging {
     case Data(id, message) =>
       listener ! Client.ReceivedData(id, message)
 
-    case UserDoesNotExists(name) =>
+    case UserDoesNotExist(name) =>
       listener ! Client.UserDoesNotExists(name)
 
     case messages.Connected(name, id) =>
@@ -163,7 +175,7 @@ object Client {
 
   case class RemoveListener(r: ActorRef)
 
-  class Broadcaster extends Actor {
+  class Broadcaster extends Actor with ActorLogging {
     val listeners: mutable.Set[ActorRef] = mutable.Set.empty
 
     def receive = {
@@ -174,6 +186,7 @@ object Client {
         listeners -= ref
 
       case m =>
+        log.debug(s"Broadcast - $m")
         listeners.foreach(_ ! m)
     }
   }

@@ -19,7 +19,11 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % "2.4.17",
   "com.typesafe.akka" %% "akka-agent" % "2.4.17",
   "com.typesafe.akka" %% "akka-remote" % "2.4.17",
-  "org.scalafx" %% "scalafxml-core-sfx8" % "0.3"
+  "org.scalafx" %% "scalafxml-core-sfx8" % "0.3",
+  "org.scaldi" %% "scaldi" % "0.5.8",
+  "org.scaldi" %% "scaldi-akka" % "0.5.8",
+  "org.typelevel" %% "shapeless-scalaz" % "0.4",
+  "joda-time" % "joda-time" % "2.9.9"
 )
 
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)

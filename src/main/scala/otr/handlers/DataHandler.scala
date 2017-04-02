@@ -4,7 +4,7 @@ import otr.actions.ReceiveMessageAction
 import otr.messages.Data
 import otr.requests.SendMessageRequest
 import otr.state.DataState
-import otr.{Handler, HandlerResult}
+import otr.{Handler, HandlerResult, RMessage}
 
 case class DataHandler(state: DataState) extends Handler {
   protected def process: Process = {
@@ -18,6 +18,6 @@ case class DataHandler(state: DataState) extends Handler {
       state
         .sendMessage(message)
         .map(x =>
-          HandlerResult(x._2, DataHandler(x._1)))
+          HandlerResult(x._2, RMessage(x._2), DataHandler(x._1)))
   }
 }

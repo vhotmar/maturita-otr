@@ -9,7 +9,7 @@ import scala.collection.mutable
 class ClientHandler(private val client: ActorRef, private val userManager: ActorRef) extends Actor {
   private val connections: mutable.Map[Int, ActorRef] = mutable.Map.empty
 
-  def receive = anonymous
+  def receive: Receive = anonymous
 
   def anonymous: Actor.Receive = {
     case m@Register(name) =>
@@ -35,6 +35,8 @@ class ClientHandler(private val client: ActorRef, private val userManager: Actor
       // check if user is not trying to connect to himself
       if (remoteName != name)
         userManager ! m
+      else
+        client ! ToWrite(UserDoesNotExist(remoteName))
 
     case UserManager.UserDoesNotExists(remoteName) =>
       client ! ToWrite(UserDoesNotExist(remoteName))
@@ -46,7 +48,7 @@ class ClientHandler(private val client: ActorRef, private val userManager: Actor
       connections += (remoteId -> connection)
 
       client ! ToWrite(Connected(remoteName, remoteId))
-      connection ! ClientHandler.Connected(remoteName, remoteId, self)
+      connection ! ClientHandler.Connected(name, id, self)
 
     case m@Data(remoteId, message) =>
       // if we have connection with this id, send the remote ClientHandler
@@ -97,6 +99,8 @@ class ClientHandler(private val client: ActorRef, private val userManager: Actor
 
 object ClientHandler {
 
+  def props(client: ActorRef, userManager: ActorRef) = Props(classOf[ClientHandler], client, userManager)
+
   case class End()
 
   case class Connected(remoteName: String, remoteId: Int, clientHandler: ActorRef)
@@ -104,6 +108,4 @@ object ClientHandler {
   case class Disconnected(remoteId: Int)
 
   case class Data(id: Int, message: ByteVector)
-
-  def props(client: ActorRef, userManager: ActorRef) = Props(classOf[ClientHandler], client, userManager)
 }

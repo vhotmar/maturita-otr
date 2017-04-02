@@ -1,9 +1,9 @@
-case class Node[T](value: T) {
-  var next: Option[T] = None
-}
 
-val s1 = Node("asdf")
+import scalaz.Scalaz._
 
-val s2 = Node("qwer")
+val e = Map(
+  "x" -> "X".success,
+  "y" -> "D".failure
+)
 
-s1.next = Some(s2)
+val d = e.filter(_._2.isFailure)

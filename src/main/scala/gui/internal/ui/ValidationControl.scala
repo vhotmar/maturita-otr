@@ -1,4 +1,4 @@
-package gui.components
+package gui.internal.ui
 
 import scalafx.Includes._
 import scalafx.scene.control.{Label, PopupControl, TextField}
@@ -44,19 +44,24 @@ class ValidationControl(textField: TextField) extends PopupControl {
     hide()
   }
 
-  def show(message: String) = {
+  def show(message: String): Unit = {
     label.text = message
 
-    invalidate
+    invalidate()
   }
 
-  def invalidate = {
+  def invalidate(): Unit = {
     val (x, y) = calculate
 
-    super.show(textField, x, y)
+    if (!showing.value)
+      super.show(textField, x, y)
+    else {
+      delegate.setAnchorX(x)
+      delegate.setAnchorY(y)
+    }
   }
 
-  def calculate = {
+  def calculate: (Double, Double) = {
     val del = pane.delegate
     val node = textField
 

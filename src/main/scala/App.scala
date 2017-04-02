@@ -15,8 +15,16 @@ object App {
     val (aSender, aReceiverManager) = MockChannelProvider.createChannel()
     val (bSender, bReceiverManager) = MockChannelProvider.createChannel()
 
-    val alice = Client.create(bSender, ClientData("alice"), init = true).toOption.get
-    val bob = Client.create(aSender, ClientData("bob")).toOption.get
+    val rec = new Receiver {
+      override def receive(bytes: Array[Byte]): FResult[Any] = {
+        println("Received", new String(bytes))
+
+        1.right
+      }
+    }
+
+    val alice = Client.create(bSender, rec, ClientData("alice"), init = true).toOption.get
+    val bob = Client.create(aSender, rec, ClientData("bob")).toOption.get
 
     aReceiverManager.subscribe(alice)
     bReceiverManager.subscribe(bob)
@@ -35,15 +43,21 @@ object App {
 
 
     println("Check sending messages with same texts provides different results")
-    bReceiverManager.enableLogging
+    bReceiverManager.enableLogging()
     alice.send("nice".getBytes)
     alice.send("nice".getBytes)
     alice.send("nice".getBytes)
-    bReceiverManager.disableLogging
+    bReceiverManager.disableLogging()
   }
 }
 
 object MockChannelProvider {
+
+  def createChannel(): (MockSender, MockReceiverManager) = {
+    val manager = new MockReceiverManager
+
+    (new MockSender(manager), manager)
+  }
 
   class MockSender(receiver: Receiver) extends Sender {
     override def send(message: Array[Byte]): Unit = {
@@ -69,14 +83,8 @@ object MockChannelProvider {
       "ok".right[Throwable]
     }
 
-    def enableLogging: Unit = enabledLogging = true
+    def enableLogging(): Unit = enabledLogging = true
 
-    def disableLogging: Unit = enabledLogging = false
-  }
-
-  def createChannel(): (MockSender, MockReceiverManager) = {
-    val manager = new MockReceiverManager
-
-    (new MockSender(manager), manager)
+    def disableLogging(): Unit = enabledLogging = false
   }
 }

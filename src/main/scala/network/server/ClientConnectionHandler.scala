@@ -28,7 +28,6 @@ class ClientConnectionHandler(private val connection: ActorRef, private val serv
         .foreach(f =>
           connection ! Write(ByteString(f: Array[Byte])))
 
-
     case PeerClosed => stop()
     case ErrorClosed => stop()
     case Closed => stop()

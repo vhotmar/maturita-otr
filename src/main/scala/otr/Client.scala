@@ -1,6 +1,6 @@
 package otr
 
-import _root_.utils.Results.FResult
+import _root_.utils.Results.{FResult, Success}
 import otr.actions.{InitAction, ReceiveMessageAction, SendMessageAction}
 import otr.handlers.ake.{DHCommitHandler, InitHandler}
 import otr.requests.SendMessageRequest
@@ -11,9 +11,10 @@ import scalaz.Scalaz._
 
 
 class Client(
-  var handler: Handler,
-  sender: Sender,
-  data: ClientData
+              var handler: Handler,
+              sender: Sender,
+              receiver: Receiver,
+              data: ClientData
 ) extends Receiver with HandlerManager {
 
   import otr.utils.AttemptConversions._
@@ -30,7 +31,7 @@ class Client(
 
   def initialized: Boolean = handler.canHandle(SendMessageRequest(Array.empty[Byte]))
 
-  def send(bytes: Array[Byte]): FResult[Boolean] = {
+  def send(bytes: Array[Byte]): FResult[Returned] = {
     val request = SendMessageRequest(bytes)
 
     if (handler.canHandle(request))
@@ -38,7 +39,7 @@ class Client(
     else {
       queue(request)
 
-      true.right
+      RQueued().right
     }
   }
 
@@ -46,13 +47,13 @@ class Client(
     processByHandler(InitAction())
   }
 
-  protected def handleAction(action: Action): FResult[Boolean] = {
+  protected def handleAction(action: Action): FResult[Success] = {
     action match {
       case SendMessageAction(message) => encodeAndSendMessage(message)
-      case ReceiveMessageAction(d) => println("Received message:", new String(d))
+      case ReceiveMessageAction(d) => receiver.receive(d)
     }
 
-    true.right
+    Success().right
   }
 
   protected def encodeAndSendMessage(message: Message): Unit = {
@@ -62,11 +63,11 @@ class Client(
 
 object Client {
 
-  def create(sender: Sender, data: ClientData, init: Boolean = false): FResult[Client] =
-    if (init) InitHandler.create().map(handler => Client(handler, sender, data))
-    else DHCommitHandler.create().map(handler => Client(handler, sender, data))
+  def create(sender: Sender, receiver: Receiver, data: ClientData, init: Boolean = false): FResult[Client] =
+    if (init) InitHandler.create().map(handler => Client(handler, sender, receiver, data))
+    else DHCommitHandler.create().map(handler => Client(handler, sender, receiver, data))
 
-  def apply(handler: Handler, sender: Sender, data: ClientData): Client = new Client(handler, sender, data)
+  def apply(handler: Handler, sender: Sender, receiver: Receiver, data: ClientData): Client = new Client(handler, sender, receiver, data)
 }
 
 case class ClientData(name: String)

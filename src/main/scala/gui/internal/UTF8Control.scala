@@ -1,4 +1,4 @@
-package gui
+package gui.internal
 
 import java.io.{InputStream, InputStreamReader}
 import java.util.ResourceBundle.Control

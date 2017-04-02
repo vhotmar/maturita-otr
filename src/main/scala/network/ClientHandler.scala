@@ -2,27 +2,45 @@ package network
 
 import java.net.InetSocketAddress
 
-import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import network.Client._
 
 import scala.collection.mutable
+import scala.concurrent.{Future, Promise}
 
 class ClientHandler(client: ActorRef, listenerActor: ActorRef) {
+
+  import scala.concurrent.ExecutionContext.Implicits.global
+
   client ! Client.AddListener(listenerActor)
 
-  def addListener(listener: ClientListener) = listenerActor ! ClientHandler.AddListener(listener)
+  def addListener[T](listenerCreator: ((T) => Unit, (Throwable) => Unit) => ClientListener): Future[T] = {
+    val promise = Promise[T]()
 
-  def removeListener(listener: ClientListener) = listenerActor ! ClientHandler.RemoveListener(listener)
+    val listener = listenerCreator(promise.success, promise.failure)
 
-  def connect(address: InetSocketAddress) = client ! Client.Connect(address)
+    addListener(listener)
 
-  def register(name: String) = client ! Client.Register(name)
+    val future = promise.future
 
-  def connectTo(name: String) = client ! Client.ConnectTo(name)
+    future.onComplete(x => removeListener(listener))
 
-  def sendMessage(id: Int, message: Array[Byte]) = client ! Client.SendMessage(id, message)
+    future
+  }
 
-  def disconnect(id: Int) = client ! Client.Disconnect(id)
+  def addListener(listener: ClientListener): Unit = listenerActor ! ClientHandler.AddListener(listener)
+
+  def removeListener(listener: ClientListener): Unit = listenerActor ! ClientHandler.RemoveListener(listener)
+
+  def connect(address: InetSocketAddress): Unit = client ! Client.Connect(address)
+
+  def register(name: String): Unit = client ! Client.Register(name)
+
+  def connectTo(name: String): Unit = client ! Client.ConnectTo(name)
+
+  def sendMessage(id: Int, message: Array[Byte]): Unit = client ! Client.SendMessage(id, message)
+
+  def disconnect(id: Int): Unit = client ! Client.Disconnect(id)
 }
 
 object ClientHandler {
@@ -33,7 +51,9 @@ object ClientHandler {
 
   case class RemoveListener(listener: ClientListener)
 
-  class ClientListenerActor() extends Actor {
+  class ClientListenerActor() extends Actor with ActorLogging {
+    val listeners: mutable.Set[ClientListener] = mutable.Set.empty
+
     def receive = {
       case ClientHandler.AddListener(c) =>
         listeners += c
@@ -41,23 +61,26 @@ object ClientHandler {
       case ClientHandler.RemoveListener(c) =>
         listeners -= c
 
-      case Connect(addr) => listeners.foreach(_.connecting(addr))
-      case Connected() => listeners.foreach(_.connected())
+      case Connect(addr) =>
+        listeners.foreach(_.connecting(addr))
+
+      case Connected() =>
+        listeners.foreach(_.connected())
+
       case ConnectionFailed() => listeners.foreach(_.connectionFailed())
+      case Register(name) => listeners.foreach(_.registering(name))
       case Registered(name, id) => listeners.foreach(_.registered(name, id))
       case NameAlreadyRegistered(name) => listeners.foreach(_.nameTaken(name))
       case ConnectTo(name) => listeners.foreach(_.connectingTo(name))
       case SendMessage(id, message) => listeners.foreach(_.sendingMessage(id, message))
       case Disconnect(id) => listeners.foreach(_.disconnect())
-      case Disconnected(id) => listeners.foreach(_.disconnected())
+      case Disconnected(id) => listeners.foreach(_.disconnected(id))
       case UserDoesNotExists(name) => listeners.foreach(_.userDoesNotExists(name))
       case ConnectedToUser(name, id) => listeners.foreach(_.connectedToUser(name, id))
       case ConnectionFromUser(name, id) => listeners.foreach(_.connectionFromUser(name, id))
       case ConnectionClosed() => listeners.foreach(_.connectionClosed())
       case ReceivedData(id, message) => listeners.foreach(_.receivedMessage(id, message))
     }
-
-    def listeners: mutable.Set[ClientListener] = mutable.Set.empty
   }
 
 }
