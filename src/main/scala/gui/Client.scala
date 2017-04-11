@@ -8,6 +8,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider
 
 import scalafx.application.JFXApp
 import scalafx.scene.Scene
+import scalafx.Includes._
 
 object Client extends JFXApp {
 
@@ -38,4 +39,14 @@ object Client extends JFXApp {
   }
 
   router.init(stage)
+
+  stage.onCloseRequest = handle {
+    Platform.exit()
+  }
+
+  override def stopApp(): Unit = {
+    super.stopApp()
+
+    module.destroy()
+  }
 }
