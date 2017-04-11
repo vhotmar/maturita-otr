@@ -12,7 +12,12 @@ import otr.utils.Crypto
 
 import scalaz.Scalaz._
 
-case class RevealSignatureHandler(encryptedPublicKey: Encrypted, hashedPublicKey: Hash, keyPair: KeyPair, longTermKeyPair: KeyPair) extends Handler {
+case class RevealSignatureHandler(
+                                   encryptedPublicKey: Encrypted,
+                                   hashedPublicKey: Hash,
+                                   keyPair: KeyPair,
+                                   longTermKeyPair: KeyPair
+                                 ) extends Handler {
 
   import otr.utils.Validate._
 

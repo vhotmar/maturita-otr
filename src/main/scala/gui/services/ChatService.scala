@@ -6,16 +6,25 @@ import gui.model.{ChatMessage, ChatState, ChatsState, ClientState}
 import gui.services.ChatService.{AlreadyConnectedTo, ConnectionWithIdDoesNotExists, UserDoesNotExists}
 import gui.services.ClientService.ClientIsNotInitialized
 import network.{ClientHandler, ClientListener}
-import otr.{Client, ClientData, Receiver, Sender}
+import otr.{Client, ClientData, Sender}
 
 import scala.concurrent.Future
 import scalafx.application.Platform
 import scalaz.Scalaz._
 
-class ChatService(clientHandler: ClientHandler, chatsState: ChatsState, clientState: ClientState) {
+class ChatService(
+                   clientHandler: ClientHandler,
+                   chatsState: ChatsState,
+                   clientState: ClientState,
+                   messageService: MessageService
+                 ) {
+
+  import scala.concurrent.ExecutionContext.Implicits.global
+
   clientHandler.addListener(new ClientListener {
     override def connectionClosed(): Unit = Platform.runLater {
       chatsState.chats.clear()
+
     }
 
     override def connectionFromUser(name: String, id: Int): Unit = Platform.runLater {
@@ -27,8 +36,6 @@ class ChatService(clientHandler: ClientHandler, chatsState: ChatsState, clientSt
         chat <- getChat(id)
         message <- chat.client.receive(message)
       } yield Results.Success()
-
-      println(s)
     }
 
     override def disconnected(id: Int): Unit = Platform.runLater {
@@ -80,9 +87,33 @@ class ChatService(clientHandler: ClientHandler, chatsState: ChatsState, clientSt
           clientHandler.sendMessage(id, bytes)
         }
       },
-      new Receiver {
+      new otr.ClientListener {
+        override def smpRequestReceived(question: Option[String]): Unit = {
+          val future = messageService
+            .text(s"User $name requested proof of your identity by using password ${question.fold("")(x => s"($x)")}")
+
+          future.onFailure({
+            case _ => abortSmp(id)
+          })
+
+          future.onSuccess({
+            case s: String => answerSmp(id, s)
+          })
+        }
+
         override def receive(bytes: Array[Byte]) = {
           receiveMessage(id, new String(bytes))
+        }
+
+        override def smpResult(res: Boolean): Unit = {
+          if (res)
+            messageService.info(s"Proof of identity with $name was successful")
+          else
+            messageService.warn(s"Proof of identity with $name was unsuccessful")
+        }
+
+        override def smpAbort(): Unit = {
+          messageService.warn(s"Proof of identity with $name was aborted")
         }
       },
       ClientData(clientState.name.value), init)
@@ -98,6 +129,22 @@ class ChatService(clientHandler: ClientHandler, chatsState: ChatsState, clientSt
     })
   }
 
+  def answerSmp(id: Int, secret: String): FResult[Results.Success] = {
+    for {
+      chat <- getChat(id)
+
+      _ = chat.client.answerSmp(secret.getBytes)
+    } yield utils.Results.Success()
+  }
+
+  def abortSmp(id: Int): FResult[Results.Success] = {
+    for {
+      chat <- getChat(id)
+
+      _ = chat.client.abortSmp()
+    } yield utils.Results.Success()
+  }
+
   def receiveMessage(id: Int, message: String): FResult[Results.Success] = {
     for {
       chat <- getChat(id)
@@ -105,6 +152,14 @@ class ChatService(clientHandler: ClientHandler, chatsState: ChatsState, clientSt
       _ = Platform.runLater {
         chat.messages += ChatMessage(id, clientState.id.value, message)
       }
+    } yield utils.Results.Success()
+  }
+
+  def requestSmp(id: Int, secret: String, message: String): FResult[Results.Success] = {
+    for {
+      chat <- getChat(id)
+
+      _ = chat.client.initSmp(secret.getBytes, Some(message.getBytes))
     } yield utils.Results.Success()
   }
 

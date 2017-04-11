@@ -2,20 +2,21 @@ package otr.state
 
 import java.security.{KeyPair, PublicKey}
 
-import otr.State
 import otr.messages.Data
 import otr.messages.data.DataT
 import otr.messages.types.{Encrypted, Mac}
 import otr.utils.Crypto
+import otr.{Parameters, State}
 import utils.Results.{FResult, FTry}
 
 case class DataState(
-  localLongTermKeyPair: KeyPair,
-  remoteLongTermPublicKey: PublicKey,
-  localDHKeyPairs: Map[Int, KeyPair],
-  remoteDHPublicKey: (Int, PublicKey),
-  counter: Array[Byte]
-) {
+                      localLongTermKeyPair: KeyPair,
+                      remoteLongTermPublicKey: PublicKey,
+                      localDHKeyPairs: Map[Int, KeyPair],
+                      remoteDHPublicKey: (Int, PublicKey),
+                      counter: Array[Byte],
+                      parameters: Parameters
+                    ) {
 
   def sendMessage(message: Array[Byte]): FResult[(DataState, Data)] = {
     import otr.utils.ByteVectorConversions._
@@ -141,6 +142,7 @@ object DataState {
     state.remote.longTermPublicKey,
     Map(state.local.keyId -> new KeyPair(state.local.publicKey, state.local.privateKey)),
     state.remote.keyId -> state.remote.publicKey,
-    Crypto.ZeroCtr
+    Crypto.ZeroCtr,
+    state.parameters
   )
 }

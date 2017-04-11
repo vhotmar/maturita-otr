@@ -6,13 +6,15 @@ import org.joda.time.format.DateTimeFormat
 import scalafx.beans.property.ObjectProperty
 import scalafx.geometry.Insets
 import scalafx.scene.control.Label
-import scalafx.scene.layout.{HBox, Pane, Priority, VBox}
+import scalafx.scene.layout._
 import scalafx.scene.paint.Color
 import scalafx.scene.shape.Circle
+import scalafx.scene.text.Text
 
 class MessageView(clientState: ClientState) extends HBox() {
   styleClass += "messageContainer"
   visible = false
+  maxHeight = Double.MaxValue
 
   val icon = new Circle() {
     styleClass += "icon"
@@ -25,13 +27,17 @@ class MessageView(clientState: ClientState) extends HBox() {
     stroke = Color.gray(0.4)
     strokeWidth = 1
 
-    margin = Insets(4, 10, 4, 4)
+    margin = Insets(4, 10, 4, 10)
   }
 
-  val message = new Label() {
+  val message = new Text() {
     styleClass += "text"
+  }
 
-    wrapText = true
+  val messageC2 = new BorderPane() {
+    styleClass += "textContainer"
+
+    center = message
   }
 
   val messageC = new Pane() {
@@ -39,8 +45,11 @@ class MessageView(clientState: ClientState) extends HBox() {
 
     hgrow = Priority.Always
 
-    children = Seq(message)
+    children = Seq(messageC2)
+    maxHeight = Double.MaxValue
   }
+
+  message.wrappingWidth <== messageC.width - 20
 
   val date = new Label() {
     styleClass += "date"

@@ -50,8 +50,6 @@ class LoginViewModel(
 
             case e =>
               messageService.error("Cannot connect to the server")
-
-              println(e)
           })
         })
     }

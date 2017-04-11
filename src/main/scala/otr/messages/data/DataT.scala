@@ -10,12 +10,12 @@ import scodec.codecs._
 import utils.{EParsable, EParsableCompanion}
 
 case class DataT(
-  senderKeyId: Int,
-  receiverKeyId: Int,
-  nextPublicKey: PublicKey,
-  counter: ByteVector,
-  encrypted: Encrypted
-) extends EParsable {
+                  senderKeyId: Int,
+                  receiverKeyId: Int,
+                  nextPublicKey: PublicKey,
+                  counter: ByteVector,
+                  encrypted: Encrypted
+                ) extends EParsable {
   type E = DataT
 
   def companion = DataT

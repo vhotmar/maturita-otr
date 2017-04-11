@@ -40,10 +40,10 @@ trait SignatureData {
 }
 
 case class RevealSignature(
-  revealedKey: ByteVector,
-  encryptedSignature: Encrypted,
-  macSignature: Mac
-) extends Message with SignatureData {
+                            revealedKey: ByteVector,
+                            encryptedSignature: Encrypted,
+                            macSignature: Mac
+                          ) extends Message with SignatureData {
   type E = RevealSignature
 
   def companion = RevealSignature

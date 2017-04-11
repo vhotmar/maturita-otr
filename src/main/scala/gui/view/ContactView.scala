@@ -3,14 +3,14 @@ package gui.view
 import gui.model.ChatState
 
 import scalafx.beans.binding.Bindings
-import scalafx.beans.property.ObjectProperty
+import scalafx.beans.property.{IntegerProperty, ObjectProperty}
 import scalafx.geometry.Insets
 import scalafx.scene.control.Label
 import scalafx.scene.layout.{HBox, VBox}
 import scalafx.scene.paint.Color
 import scalafx.scene.shape.Circle
 
-class ContactView() extends HBox() {
+class ContactView(currentChatId: IntegerProperty) extends HBox() {
   styleClass += "contact"
   visible = false
 
@@ -44,6 +44,21 @@ class ContactView() extends HBox() {
   )
 
   val model: ObjectProperty[ChatState] = new ObjectProperty[ChatState]()
+
+  val b = Bindings.createObjectBinding(() => {
+    val styles = List("contact")
+
+    if (currentChatId.value != null && model.value != null && currentChatId.value == model.value.id)
+      styles :+ "active"
+    else
+      styles
+  }, currentChatId, model)
+
+  b.onChange((_, _, n) => {
+    styleClass.clear()
+
+    n.foreach(x => styleClass += x)
+  })
 
   model.onChange((_, oldValue, newValue) => {
     if (newValue == null) {

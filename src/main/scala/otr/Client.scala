@@ -1,9 +1,9 @@
 package otr
 
 import _root_.utils.Results.{FResult, Success}
-import otr.actions.{InitAction, ReceiveMessageAction, SendMessageAction}
+import otr.actions._
 import otr.handlers.ake.{DHCommitHandler, InitHandler}
-import otr.requests.SendMessageRequest
+import otr.requests._
 import otr.utils.{Message, MessageConfig}
 import scodec.Codec
 
@@ -13,9 +13,9 @@ import scalaz.Scalaz._
 class Client(
               var handler: Handler,
               sender: Sender,
-              receiver: Receiver,
+              clientListener: ClientListener,
               data: ClientData
-) extends Receiver with HandlerManager {
+            ) extends Receiver with HandlerManager {
 
   import otr.utils.AttemptConversions._
   import otr.utils.BitVectorConversions._
@@ -34,23 +34,34 @@ class Client(
   def send(bytes: Array[Byte]): FResult[Returned] = {
     val request = SendMessageRequest(bytes)
 
-    if (handler.canHandle(request))
-      processByHandler(request)
-    else {
-      queue(request)
+    processByHandlerOrQueue(request)
+  }
 
-      RQueued().right
-    }
+  def initSmp(secret: Array[Byte], question: Option[Array[Byte]]): FResult[Returned] = {
+    val request = InitSmpRequest(secret, question)
+
+    processByHandler(request)
+  }
+
+  def answerSmp(secret: Array[Byte]): FResult[Returned] = {
+    processByHandler(AnswerSmpRequest(secret))
+  }
+
+  def abortSmp(): FResult[Returned] = {
+    processByHandler(AbortSmpRequest())
   }
 
   def init(): Unit = {
-    processByHandler(InitAction())
+    processByHandler(InitRequest())
   }
 
   protected def handleAction(action: Action): FResult[Success] = {
     action match {
       case SendMessageAction(message) => encodeAndSendMessage(message)
-      case ReceiveMessageAction(d) => receiver.receive(d)
+      case ReceiveMessageAction(d) => if (d.length > 0) clientListener.receive(d)
+      case ReceiveSmpAction(message) => clientListener.smpRequestReceived(message)
+      case ResultSmpAction(res) => clientListener.smpResult(res)
+      case AbortSmpAction() => clientListener.smpAbort()
     }
 
     Success().right
@@ -63,11 +74,12 @@ class Client(
 
 object Client {
 
-  def create(sender: Sender, receiver: Receiver, data: ClientData, init: Boolean = false): FResult[Client] =
-    if (init) InitHandler.create().map(handler => Client(handler, sender, receiver, data))
-    else DHCommitHandler.create().map(handler => Client(handler, sender, receiver, data))
+  def create(sender: Sender, clientListener: ClientListener, data: ClientData, init: Boolean = false): FResult[Client] =
+    if (init) InitHandler.create().map(handler => Client(handler, sender, clientListener, data))
+    else DHCommitHandler.create().map(handler => Client(handler, sender, clientListener, data))
 
-  def apply(handler: Handler, sender: Sender, receiver: Receiver, data: ClientData): Client = new Client(handler, sender, receiver, data)
+  def apply(handler: Handler, sender: Sender, clientListener: ClientListener, data: ClientData): Client =
+    new Client(handler, sender, clientListener, data)
 }
 
 case class ClientData(name: String)

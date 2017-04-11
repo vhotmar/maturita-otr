@@ -22,27 +22,27 @@ trait Private {
 trait Pair extends Public with Private {}
 
 case class Local(
-  publicKey: PublicKey,
-  privateKey: PrivateKey,
-  longTermPublicKey: PublicKey,
-  longTermPrivateKey: PrivateKey,
-  keyId: Int
-) extends Pair
+                  publicKey: PublicKey,
+                  privateKey: PrivateKey,
+                  longTermPublicKey: PublicKey,
+                  longTermPrivateKey: PrivateKey,
+                  keyId: Int
+                ) extends Pair
 
 case class NonCompleteRemote(publicKey: PublicKey) extends PartialPublic
 
 case class Remote(publicKey: PublicKey, longTermPublicKey: PublicKey, keyId: Int) extends Public
 
 case class Parameters(
-  secret: Array[Byte],
-  ssid: Array[Byte],
-  c: Array[Byte],
-  cp: Array[Byte],
-  m1: Array[Byte],
-  m1p: Array[Byte],
-  m2: Array[Byte],
-  m2p: Array[Byte]
-)
+                       secret: Array[Byte],
+                       ssid: Array[Byte],
+                       c: Array[Byte],
+                       cp: Array[Byte],
+                       m1: Array[Byte],
+                       m1p: Array[Byte],
+                       m2: Array[Byte],
+                       m2p: Array[Byte]
+                     )
 
 
 object Parameters {

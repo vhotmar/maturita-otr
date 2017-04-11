@@ -10,10 +10,10 @@ import scodec.codecs._
 
 // TODO: Need to add old mac keys - forgeability
 case class Data(
-  flags: Byte,
-  dataT: types.Data[DataT],
-  mac: Mac
-) extends Message {
+                 flags: Byte,
+                 dataT: types.Data[DataT],
+                 mac: Mac
+               ) extends Message {
   type E = Data
 
   def companion = Data

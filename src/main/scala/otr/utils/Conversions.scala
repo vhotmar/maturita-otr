@@ -10,6 +10,15 @@ import utils.Results.FResult
 import scalaz.Scalaz._
 import scalaz._
 
+object TupleConversions {
+  implicit def productToProductOps(a: Product) = new ProductOps(a)
+
+  class ProductOps(product: Product) {
+    def plist[T] = product.productIterator.toList.asInstanceOf[List[T]]
+  }
+
+}
+
 object ByteVectorConversions {
   implicit def byteVectorToByteArray(vec: ByteVector): Array[Byte] = vec.toArray
 

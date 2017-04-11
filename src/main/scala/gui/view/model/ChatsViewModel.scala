@@ -16,9 +16,11 @@ class ChatsViewModel(
                     ) {
   val chats = ObservableMapValues(chatsState.chats)
 
+  val currentChatId = chatsState.currentChatId
+
   val currentChat: ObjectBinding[Option[ChatState]] = Bindings.createObjectBinding(() => {
-    chatsState.chats.get(chatsState.currentChatId.value)
-  }, chatsState.currentChatId, chatsState.chats)
+    chatsState.chats.get(currentChatId.value)
+  }, currentChatId, chatsState.chats)
 
   val hasChat: BooleanBinding = Bindings.createBooleanBinding(() => currentChat.value.isDefined, currentChat)
 
@@ -30,8 +32,6 @@ class ChatsViewModel(
       .onFailure({
         case e =>
           messageService.error(s"Could not connect to $n")
-
-          println(e)
       })
   }
 
@@ -47,5 +47,14 @@ class ChatsViewModel(
 
   def onContactChange(chatState: ChatState): Unit = {
     chatsState.currentChatId.value = chatState.id
+  }
+
+  def prove() = {
+    for {
+      question <- messageService.text("Question for your secret")
+      secret <- messageService.text("Your secret")
+
+      r = chatService.requestSmp(chatsState.currentChatId.value, secret, question)
+    } yield r
   }
 }

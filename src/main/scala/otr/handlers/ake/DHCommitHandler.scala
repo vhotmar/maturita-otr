@@ -10,9 +10,9 @@ import utils.Results.FResult
 import scalaz.Scalaz._
 
 case class DHCommitHandler(
-  keyPair: KeyPair,
-  longTermKeyPair: KeyPair
-) extends Handler {
+                            keyPair: KeyPair,
+                            longTermKeyPair: KeyPair
+                          ) extends Handler {
   protected def process: Process = {
     case DHCommit(encryptedPublicKey, hashedPublicKey) =>
       HandlerResult(

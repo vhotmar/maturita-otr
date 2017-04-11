@@ -1,7 +1,5 @@
 package gui.view
 
-import javafx.collections.ListChangeListener
-
 import gui.internal.{DisableSelectionModel, ViewLoader}
 import gui.model.{ChatMessage, ChatState}
 import gui.view.model.ChatsViewModel
@@ -10,7 +8,6 @@ import scalafx.Includes._
 import scalafx.collections.ObservableBuffer
 import scalafx.scene.control._
 import scalafx.scene.input.{KeyCode, KeyEvent, MouseEvent}
-import scalafx.scene.layout.{HBox, StackPane}
 import scalafxml.core.macros.sfxml
 
 @sfxml
@@ -21,19 +18,15 @@ class ChatsView(
                  message: TextArea,
                  model: ChatsViewModel,
                  sendMessageButton: Button,
-                 c1: StackPane,
-                 c2: HBox
+                 proveButton: Button
                ) {
-  c1.prefHeight <== c2.height
-  c1.minHeight <== c2.height
-
   contacts.items = model.chats
   contacts.focusTraversable = false
   contacts.selectionModel = new DisableSelectionModel[ChatState]
 
   contacts.cellFactory = (_) => {
     new ListCell[ChatState]() {
-      protected val view = new ContactView()
+      protected val view = new ContactView(model.currentChatId)
 
       editable.value = false
       prefWidth <== contacts.width - 2
@@ -71,19 +64,6 @@ class ChatsView(
     }
   }
 
-  val listener = new ListChangeListener[ChatMessage] {
-    override def onChanged(c: ListChangeListener.Change[_ <: ChatMessage]): Unit = {
-      println("Messages changed")
-    }
-  }
-
-  messages.items.onChange((_, oldValue, newValue) => {
-    oldValue.removeListener(listener)
-    newValue.addListener(listener)
-
-    println("Messages changed")
-  })
-
   model.currentChat.onChange((_, _, newChat) => newChat match {
     case Some(chat) =>
       messages.items = chat.messages
@@ -105,6 +85,7 @@ class ChatsView(
 
   message.disable.bind(model.hasChat.not())
   sendMessageButton.disable.bind(model.hasChat.not())
+  proveButton.disable.bind(model.hasChat.not())
 
   def addContact(): Unit = {
     // TODO: Better would be simple popup
@@ -124,5 +105,9 @@ class ChatsView(
 
   def sendMessage(): Unit = {
     model.sendMessage()
+  }
+
+  def prove(): Unit = {
+    model.prove()
   }
 }

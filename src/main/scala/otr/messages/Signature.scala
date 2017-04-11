@@ -11,7 +11,10 @@ import scodec.bits.{ByteVector, HexStringSyntax}
 import scodec.codecs._
 import utils.Results.FResult
 
-case class Signature(encryptedSignature: Encrypted, macSignature: Mac) extends Message with SignatureData {
+case class Signature(
+                      encryptedSignature: Encrypted,
+                      macSignature: Mac
+                    ) extends Message with SignatureData {
   type E = Signature
 
   def companion = Signature

@@ -30,7 +30,6 @@ object Message extends BCommandParsable[MessageConfig, Message] {
   }
 
   def decodeHeader(bits: BitVector, config: MessageConfig): Attempt[(ByteVector, BitVector)] = {
-    println(bits.toByteVector)
     for {
       version <- uint16.decode(bits).flatMap { version =>
         if (version.value == config.version) Successful(version)

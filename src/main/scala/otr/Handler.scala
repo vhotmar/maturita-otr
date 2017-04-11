@@ -1,7 +1,7 @@
 package otr
 
 import _root_.utils.Results.{FResult, Success}
-import otr.actions.SendMessageAction
+import otr.actions.{ProcessAction, SendMessageAction}
 import otr.utils.Message
 
 import scalaz.Scalaz._
@@ -51,9 +51,24 @@ trait HandlerManager {
   private var dataQueue: List[Any] = List.empty
 
   protected def processByHandler(data: Any): FResult[Returned] = {
-    handler
+    val r = handler
       .handle(data)
       .flatMap(handleHandlerResult)
+
+    if (r.isLeft)
+      println(r)
+
+    r
+  }
+
+  protected def processByHandlerOrQueue(data: Any): FResult[Returned] = {
+    if (handler.canHandle(data))
+      processByHandler(data)
+    else {
+      queue(data)
+
+      RQueued().right
+    }
   }
 
   protected def tryProcessQueued(): FResult[Success] = {
@@ -82,8 +97,15 @@ trait HandlerManager {
       _ <- setHandler(result.newHandler)
 
       // Process actions
-      _ <- result.actions.map(handleAction).sequenceU
+      _ <- result.actions.map(handlePAction).sequenceU
     } yield result.returned
+  }
+
+  private def handlePAction(action: Action): FResult[Success] = {
+    action match {
+      case ProcessAction(data) => processByHandler(data).map(_ => Success())
+      case e => handleAction(e)
+    }
   }
 }
 

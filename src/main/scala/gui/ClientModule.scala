@@ -50,6 +50,4 @@ class ClientModule extends Module {
 
   bind[LoginViewModel] to injected[LoginViewModel]
   bind[ChatsViewModel] to injected[ChatsViewModel]
-
-  println(inject[ChatsViewModel])
 }

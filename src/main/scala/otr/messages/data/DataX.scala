@@ -13,10 +13,10 @@ import utils.Results.FResult
 import utils.{EParsable, EParsableCompanion}
 
 case class DataX(
-  localLongTermPublicKey: PublicKey,
-  localKeyId: Int,
-  signature: ByteVector
-) extends EParsable {
+                  localLongTermPublicKey: PublicKey,
+                  localKeyId: Int,
+                  signature: ByteVector
+                ) extends EParsable {
   type E = DataX
 
   def companion = DataX

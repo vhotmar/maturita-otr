@@ -8,11 +8,11 @@ import scodec.codecs._
 import utils.{EParsable, EParsableCompanion}
 
 case class DataM(
-  localPublicKey: PublicKey,
-  remotePublicKey: PublicKey,
-  localLongTermPublicKey: PublicKey,
-  localKeyId: Int = 1
-) extends EParsable {
+                  localPublicKey: PublicKey,
+                  remotePublicKey: PublicKey,
+                  localLongTermPublicKey: PublicKey,
+                  localKeyId: Int = 1
+                ) extends EParsable {
 
   type E = DataM
 
